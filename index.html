@@ -438,10 +438,24 @@ tbody td{padding:9px 14px;vertical-align:middle;}
     </div>
   </div>
   <div class="export-grid">
-    <div class="export-card" onclick="gerarRelatorio('mobile')">
-      <div class="export-icon">📱</div>
-      <div class="export-name">Relatório Mobile</div>
-      <div class="export-desc">HTML otimizado para celular. Envie pelo WhatsApp e abra no navegador.</div>
+    <div class="export-card" onclick="gerarRelatorioLink()">
+      <div class="export-icon">🔗</div>
+      <div class="export-name">Relatório Mobile (Link)</div>
+      <div class="export-desc">Gera um link para compartilhar no WhatsApp. Abre no navegador do iPhone e Android com todas as animações.</div>
+    </div>
+    <div id="modal-link" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;align-items:center;justify-content:center;padding:20px">
+      <div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:16px;padding:28px;max-width:480px;width:100%">
+        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">🔗 Link gerado!</div>
+        <div style="font-size:13px;color:#6B8AB0;margin-bottom:16px">Copie o link abaixo e envie pelo WhatsApp. Quem abrir verá o relatório completo no navegador.</div>
+        <div style="display:flex;gap:8px;margin-bottom:20px">
+          <input id="link-gerado" readonly style="flex:1;background:#050A14;border:1px solid #1E2E4A;color:#7EC8F0;padding:10px 14px;border-radius:9px;font-size:13px;font-family:monospace">
+          <button class="btn btn-blue" onclick="copiarLink()">📋 Copiar</button>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-ghost" onclick="document.getElementById('modal-link').style.display='none'">Fechar</button>
+          <button class="btn btn-green" onclick="abrirWhatsApp()">📲 Enviar no WhatsApp</button>
+        </div>
+      </div>
     </div>
     <div class="export-card" onclick="gerarRelatorio('web')">
       <div class="export-icon">💻</div>
@@ -1562,6 +1576,55 @@ function setDisp(tipo, btn){
   dispositivoMobile = tipo;
   document.querySelectorAll('#tab-android,#tab-iphone').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// GERAR LINK DO RELATÓRIO MOBILE
+// ══════════════════════════════════════════
+async function gerarRelatorioLink(){
+  const modFiltro=document.getElementById('exp-modulo').value;
+  const titulo=document.getElementById('exp-titulo').value||'Instituto de Vencedores';
+  const modulosParaIncluir=modFiltro==='todos'?[1,2,3]:[parseInt(modFiltro)];
+  const reportData=buildReportData(modulosParaIncluir);
+  const html=gerarHTMLMobile(reportData, titulo);
+
+  toast('Gerando link, aguarde...⏳');
+
+  try {
+    // Salva o HTML no Firestore com ID único
+    const id = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const db2 = getFirestore();
+    await setDoc(doc(db2, "relatorios", id), {
+      html: html,
+      titulo: titulo,
+      criadoEm: new Date().toISOString()
+    });
+
+    const link = `${location.origin}/relatorio?id=${id}`;
+    document.getElementById('link-gerado').value = link;
+    const modal = document.getElementById('modal-link');
+    modal.style.display = 'flex';
+    toast('Link gerado! ✓');
+  } catch(e) {
+    console.error(e);
+    toast('Erro ao gerar link. Tente novamente.', true);
+  }
+}
+
+function copiarLink(){
+  const inp = document.getElementById('link-gerado');
+  inp.select();
+  navigator.clipboard.writeText(inp.value).then(()=>toast('Link copiado! ✓')).catch(()=>{
+    document.execCommand('copy');
+    toast('Link copiado! ✓');
+  });
+}
+
+function abrirWhatsApp(){
+  const link = document.getElementById('link-gerado').value;
+  const msg = encodeURIComponent('📊 *Relatório Instituto de Vencedores*\n\nAcesse pelo link abaixo (abre no navegador):\n' + link);
+  window.open('https://wa.me/?text=' + msg, '_blank');
 }
 
 function gerarRelatorio(tipo){
