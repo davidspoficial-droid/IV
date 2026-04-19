@@ -1701,11 +1701,14 @@ function buildReportData(modulosParaIncluir){
   const data={modulos:[]};
   modulosParaIncluir.forEach(m=>{
     const mod=MODULOS[m];
-    const alunos=DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO');
+    const alunosModAtivos=DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO'&&(a.modulo||'1')==String(m));
+    const alunosModDesist=DB.alunos.filter(a=>a.situacao==='DESISTENTE'&&(a.modulo||'1')==String(m));
+    const nDesistentes=alunosModDesist.length;
+    const totalTodos=alunosModAtivos.length+nDesistentes;
+
     const semanas=mod.semanas.map((sem,si)=>{
-      const presentes=alunos.filter(al=>sem.aulas.some(a=>DB.presencas[presKey(al.id,m,si,a)]));
-      const eqMap={};
-      const eqAlunos={};
+      const presentes=alunosModAtivos.filter(al=>sem.aulas.some(a=>DB.presencas[presKey(al.id,m,si,a)]));
+      const eqMap={};const eqAlunos={};
       presentes.forEach(al=>{
         const eq=DB.equipes.find(e=>e.id===al.equipeId);
         const eqNome=eq?eq.nome:'SEM EQUIPE';
@@ -1714,149 +1717,239 @@ function buildReportData(modulosParaIncluir){
         eqAlunos[eqNome].push(al.nome||'—');
       });
       const equipes=Object.entries(eqMap).sort((a,b)=>b[1]-a[1]).map(([nome,p])=>({nome,p,alunos:(eqAlunos[nome]||[]).sort()}));
-      return {label:sem.label, total:presentes.length, equipes};
+      const pct=totalTodos>0?Math.round(presentes.length/totalTodos*100):0;
+      return {label:sem.label, total:presentes.length, equipes, pct};
     });
-    data.modulos.push({num:m, nome:mod.nome, cor:mod.cor, totalAlunos:alunos.length, semanas,
-      nDesistentes: DB.alunos.filter(a=>a.situacao==='DESISTENTE').length});
+
+    // retenção geral = média das semanas com dados
+    const semsComDados=semanas.filter(s=>s.total>0);
+    const retencaoGeral=semsComDados.length>0?Math.round(semsComDados.reduce((a,s)=>a+s.pct,0)/semsComDados.length):0;
+
+    // equipes presença por semana (percentual)
+    const todasEquipes=[...new Set(DB.equipes.filter(e=>e.modulo==String(m)||e.modulo==='todos').map(e=>e.nome))];
+    const equipesSemanas=todasEquipes.map(eqNome=>{
+      const eqObj=DB.equipes.find(e=>e.nome===eqNome);
+      const totalEq=alunosModAtivos.filter(al=>al.equipeId===(eqObj&&eqObj.id)).length;
+      const porSemana=semanas.map((sem,si)=>{
+        const eq=sem.equipes.find(e=>e.nome===eqNome);
+        if(!eq||!totalEq) return 0;
+        return Math.round(eq.p/totalEq*100);
+      });
+      const mediaRet=porSemana.filter(v=>v>0).length>0?Math.round(porSemana.filter(v=>v>0).reduce((a,v)=>a+v,0)/porSemana.filter(v=>v>0).length):0;
+      return {nome:eqNome, porSemana, total:mediaRet, totalAlunos:totalEq};
+    }).filter(e=>e.totalAlunos>0).sort((a,b)=>b.total-a.total);
+
+    // retenção por equipe
+    const eqStats=equipesSemanas.map(eq=>{
+      const rc=eq.total>=75?'#3EC97A':eq.total>=40?'#F39C12':'#E05555';
+      return {nome:eq.nome, totalAlunos:eq.totalAlunos, retencao:eq.total, cor:rc};
+    });
+
+    // ativos x desistentes por equipe
+    const desistentesPorEq=DB.equipes.filter(e=>e.modulo==String(m)||e.modulo==='todos').map(eqObj=>{
+      const ativos=alunosModAtivos.filter(a=>a.equipeId===eqObj.id).length;
+      const desist=alunosModDesist.filter(a=>a.equipeId===eqObj.id).length;
+      const total=ativos+desist;
+      if(!total) return null;
+      return {nome:eqObj.nome,ativos,desistentes:desist,total,
+        pctAtivos:Math.round(ativos/total*100),pctDesist:Math.round(desist/total*100)};
+    }).filter(Boolean).sort((a,b)=>b.ativos-a.ativos);
+
+    data.modulos.push({
+      num:m, nome:mod.nome, cor:mod.cor,
+      totalAlunos:alunosModAtivos.length,
+      nDesistentes, totalTodos, retencaoGeral,
+      semanas, equipesSemanas, eqStats, desistentesPorEq
+    });
   });
   return data;
 }
 
 function gerarHTMLMobile(data, titulo){
-  const dt=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
-  const PAL=['#4A90D9','#3EC97A','#9B59B6','#E67E22','#E05555','#1ABC9C','#F39C12','#85C1E9'];
-  const icons=['📖','📗','📄'];
-
-  let modulosHTML='', tabsHTML='';
+  var dt=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  var PAL=['#4A90D9','#3EC97A','#9B59B6','#E67E22','#E05555','#1ABC9C','#F39C12','#85C1E9','#AED6F1','#7EDBA8','#C39BD3','#F1948A'];
+  var SEM_PAL=['#4A90D9','#3EC97A','#E67E22','#9B59B6','#E05555','#1ABC9C','#F39C12','#F1948A'];
+  var icons=['📘','📗','📕'];
+  var tabsHTML='', modulosHTML='';
 
   data.modulos.forEach(function(mod, mi){
-    // ── aba do módulo ──
-    tabsHTML += `<button onclick="showMod(${mi},this)" id="tab-${mi}" style="flex:1;padding:10px 4px;font-size:10px;font-weight:600;border:none;background:transparent;color:${mi===0?'#7EC8F0':'#6B8AB0'};text-align:center;line-height:1.3;cursor:pointer;border-bottom:3px solid ${mi===0?mod.cor:'transparent'};-webkit-tap-highlight-color:transparent"><span style="display:block;font-size:16px;margin-bottom:2px">${icons[mi]||'📄'}</span>${mod.nome}</button>`;
+    var cor = mod.cor;
+    var tabAtivo = mi===0;
+    tabsHTML += '<button onclick="showMod('+mi+',this)" id="tab-'+mi+'" data-cor="'+cor+'" style="flex:1;padding:10px 4px;font-size:10px;font-weight:600;border:none;background:transparent;color:'+(tabAtivo?'#E8F0FF':'#6B8AB0')+';text-align:center;line-height:1.3;cursor:pointer;border-bottom:3px solid '+(tabAtivo?cor:'transparent')+';-webkit-tap-highlight-color:transparent"><span style="display:block;font-size:17px;margin-bottom:2px">'+(icons[mi]||'📄')+'</span>'+mod.nome+'</button>';
 
-    // ── filtra só semanas com dados ──
-    const semsComDados = mod.semanas.filter(function(s){ return s.total > 0; });
+    var semsComDados = mod.semanas.filter(function(s){ return s.total > 0; });
 
-    // ── botões de semana ──
-    let semBtnsHTML = '';
+    // KPI
+    var retCor = mod.retencaoGeral>=75?'#3EC97A':mod.retencaoGeral>=40?'#F39C12':'#E05555';
+    var kpiHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px">'
+      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+cor+'"></div><div style="font-size:28px;font-weight:900;color:'+cor+';line-height:1">'+mod.totalAlunos+'</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Total Ativos</div></div>'
+      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:#E05555"></div><div style="font-size:28px;font-weight:900;color:#F08080;line-height:1">'+(mod.nDesistentes||0)+'</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Desistentes</div></div>'
+      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden;grid-column:1/-1"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+retCor+'"></div><div style="font-size:28px;font-weight:900;color:'+retCor+';line-height:1">'+(mod.retencaoGeral||0)+'%</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Retencao Geral</div></div>'
+      +'</div>';
+
+    // Comparativo por semana
+    var legendHTML = semsComDados.map(function(s,i){
+      var lbl = s.label.includes('Inaugural')?'Inaugural':s.label.includes('Apresent')?'Apresentacao':s.label.replace(/Semana\s+/i,'S').split('--')[0].trim().replace('—','').trim();
+      return '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6B8AB0"><div style="width:8px;height:8px;border-radius:50%;background:'+SEM_PAL[i%SEM_PAL.length]+'"></div>'+lbl+'</div>';
+    }).join('');
+
+    var comparativoHTML = (mod.equipesSemanas||[]).map(function(eq){
+      var semBars = eq.porSemana.map(function(v,i){
+        if(!v) return '';
+        return '<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">'
+          +'<div style="flex:1;height:5px;background:#1E2E4A;border-radius:3px;overflow:hidden">'
+          +'<div style="height:100%;border-radius:3px;width:'+v+'%;background:'+SEM_PAL[i%SEM_PAL.length]+'"></div></div>'
+          +'<span style="width:28px;text-align:right;font-size:10px;font-weight:700;color:'+SEM_PAL[i%SEM_PAL.length]+'">'+v+'%</span>'
+          +'</div>';
+      }).join('');
+      if(!semBars) return '';
+      return '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(30,46,74,.35)">'
+        +'<div style="width:95px;flex-shrink:0;font-size:11px;font-weight:600;color:#E8F0FF;padding-top:2px">'+eq.nome+'</div>'
+        +'<div style="flex:1;min-width:0">'+semBars+'</div></div>';
+    }).filter(Boolean).join('') || '<div style="text-align:center;padding:20px;color:#6B8AB0;font-size:12px">Sem dados</div>';
+
+    // Retencao por equipe
+    var retEquipeHTML = (mod.eqStats||[]).map(function(e){
+      return '<div style="margin-bottom:9px">'
+        +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'
+        +'<span style="color:#E8F0FF">'+e.nome+' <span style="color:#6B8AB0;font-size:10px">('+e.totalAlunos+')</span></span>'
+        +'<span style="font-weight:700;color:'+e.cor+'">'+e.retencao+'%</span></div>'
+        +'<div style="height:5px;background:#1E2E4A;border-radius:3px;overflow:hidden">'
+        +'<div style="height:100%;border-radius:3px;width:'+e.retencao+'%;background:'+e.cor+'"></div></div></div>';
+    }).join('') || '<div style="text-align:center;padding:20px;color:#6B8AB0;font-size:12px">Sem dados</div>';
+
+    // Ativos x desistentes
+    var ativosDesistHTML = (mod.desistentesPorEq||[]).map(function(e){
+      return '<div style="margin-bottom:11px">'
+        +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'
+        +'<strong style="color:#E8F0FF">'+e.nome+'</strong>'
+        +'<span style="display:flex;gap:8px">'
+        +'<span style="color:#3EC97A">&#x2705; '+e.ativos+'</span>'
+        +(e.desistentes?'<span style="color:#E05555">&#x1F6AA; '+e.desistentes+'</span>':'')
+        +'</span></div>'
+        +'<div style="height:7px;background:#1E2E4A;border-radius:4px;overflow:hidden;display:flex">'
+        +'<div style="height:100%;width:'+e.pctAtivos+'%;background:#3EC97A"></div>'
+        +'<div style="height:100%;width:'+e.pctDesist+'%;background:#E05555"></div>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:10px;color:#6B8AB0;margin-top:2px">'
+        +'<span>'+e.pctAtivos+'% ativos</span>'
+        +(e.desistentes?'<span>'+e.pctDesist+'% desist.</span>':'')
+        +'</div></div>';
+    }).join('') || '<div style="text-align:center;padding:20px;color:#6B8AB0;font-size:12px">Sem dados</div>';
+
+    // Botoes de semana (SEM contagem)
+    var semBtnsHTML = '';
     semsComDados.forEach(function(sem, si){
-      // pega rótulo curto: "Inaugural", "S02", "Apresentação" etc
-      let labelCurto = sem.label;
-      if(sem.label.includes('Inaugural'))   labelCurto = '🎓 Inaugural';
-      else if(sem.label.includes('Apresent')) labelCurto = '🏆 Apresentação';
-      else {
-        // extrai número da semana ex: "Semana 03 — Aulas 03 e 04" → "S03"
-        var m = sem.label.match(/Semana\s+(\d+)/i);
-        labelCurto = m ? 'Sem ' + m[1] : 'S'+(si+1);
-      }
-      const ativo = si===0;
-      semBtnsHTML += `<button onclick="showSem(${mi},${si},this)" id="sbtn-${mi}-${si}" style="flex:0 0 auto;padding:7px 14px;font-size:11px;font-weight:600;border:none;border-radius:20px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;background:${ativo?mod.cor:'rgba(255,255,255,0.06)'};color:${ativo?'#fff':'#6B8AB0'};">${labelCurto}<span style="margin-left:5px;font-size:10px;opacity:.8">${sem.total}</span></button>`;
+      var labelCurto;
+      if(sem.label.includes('Inaugural'))      labelCurto = '&#127891; Inaugural';
+      else if(sem.label.includes('Apresent'))  labelCurto = '&#127942; Apresentacao';
+      else { var mm=sem.label.match(/Semana\s+(\d+)/i); labelCurto = mm?'Sem '+mm[1]:'S'+(si+1); }
+      var ativo = si===0;
+      semBtnsHTML += '<button onclick="showSem('+mi+','+si+',this)" id="sbtn-'+mi+'-'+si+'" data-cor="'+cor+'" style="flex:0 0 auto;padding:7px 14px;font-size:11px;font-weight:600;border:none;border-radius:20px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;background:'+(ativo?cor:'rgba(255,255,255,0.06)')+';color:'+(ativo?'#fff':'#6B8AB0')+'">'+labelCurto+'</button>';
     });
 
-    // ── conteúdo de cada semana ──
-    let semanasConteudo = '';
+    // Conteudo de cada semana
+    var semanasConteudo = '';
     semsComDados.forEach(function(sem, si){
-      let rankHTML = '';
-      if(sem.equipes.length === 0){
-        rankHTML = '<div style="color:#6B8AB0;text-align:center;padding:30px 0;font-size:13px">Nenhuma equipe com presença</div>';
-      }
-      sem.equipes.forEach(function(eq, i){
-        const uid='u'+Math.random().toString(36).slice(2,8);
-        const maxP=sem.equipes[0]?sem.equipes[0].p:1;
-        const pct=Math.round(eq.p/maxP*100);
-        const alunosHtml=eq.alunos.map(function(n){
-          return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(30,46,74,.3)"><div style="width:5px;height:5px;border-radius:50%;background:${PAL[i%PAL.length]};flex-shrink:0"></div><span style="font-size:12px;color:#E8F0FF">${n}</span></div>`;
+      var maxP = sem.equipes.length>0?sem.equipes[0].p:1;
+      var rankHTML = sem.equipes.length===0
+        ? '<div style="color:#6B8AB0;text-align:center;padding:30px 0;font-size:13px">Nenhuma equipe com presenca</div>'
+        : '';
+      sem.equipes.forEach(function(eq,i){
+        var uid='u'+Math.random().toString(36).slice(2,8);
+        var pct=Math.round(eq.p/maxP*100);
+        var alunosHtml=eq.alunos.map(function(n){
+          return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(30,46,74,.3)"><div style="width:5px;height:5px;border-radius:50%;background:'+PAL[i%PAL.length]+';flex-shrink:0"></div><span style="font-size:12px;color:#E8F0FF">'+n+'</span></div>';
         }).join('')||'<div style="font-size:11px;color:#6B8AB0;padding:4px 0">Nenhum aluno</div>';
-        rankHTML+=`<div onclick="tRA('${uid}')" style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;margin-bottom:8px;overflow:hidden;cursor:pointer"><div style="display:flex;align-items:center;gap:10px;padding:11px 13px"><div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;background:${PAL[i%PAL.length]}">${i+1}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#E8F0FF">${eq.nome}</div><div style="height:4px;background:#1E2E4A;border-radius:2px;overflow:hidden;margin-top:6px"><div style="height:100%;border-radius:2px;width:${pct}%;background:${PAL[i%PAL.length]};transition:width .4s"></div></div></div><div style="text-align:right;flex-shrink:0;margin:0 6px"><div style="font-size:22px;font-weight:900;color:${PAL[i%PAL.length]}">${eq.p}</div><div style="font-size:9px;color:#6B8AB0">aluno${eq.p!==1?'s':''}</div></div><div id="arr_${uid}" style="font-size:11px;color:#6B8AB0">▼</div></div><div id="${uid}" style="display:none;padding:0 13px 12px;border-top:1px solid rgba(30,46,74,.4)"><div style="font-size:9px;font-weight:700;color:#6B8AB0;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px">Alunos presentes</div>${alunosHtml}</div></div>`;
+        rankHTML+='<div onclick="tRA(\''+uid+'\')" style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;margin-bottom:8px;overflow:hidden;cursor:pointer">'
+          +'<div style="display:flex;align-items:center;gap:10px;padding:11px 13px">'
+          +'<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;background:'+PAL[i%PAL.length]+'">'+(i+1)+'</div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#E8F0FF">'+eq.nome+'</div>'
+          +'<div style="height:4px;background:#1E2E4A;border-radius:2px;overflow:hidden;margin-top:6px"><div style="height:100%;border-radius:2px;width:'+pct+'%;background:'+PAL[i%PAL.length]+'"></div></div></div>'
+          +'<div style="text-align:right;flex-shrink:0;margin:0 6px"><div style="font-size:22px;font-weight:900;color:'+PAL[i%PAL.length]+'">'+eq.p+'</div><div style="font-size:9px;color:#6B8AB0">aluno'+(eq.p!==1?'s':'')+'</div></div>'
+          +'<div id="arr_'+uid+'" style="font-size:11px;color:#6B8AB0">&#9660;</div></div>'
+          +'<div id="'+uid+'" style="display:none;padding:0 13px 12px;border-top:1px solid rgba(30,46,74,.4)"><div style="font-size:9px;font-weight:700;color:#6B8AB0;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px">Alunos presentes</div>'+alunosHtml+'</div></div>';
       });
-      semanasConteudo += `<div id="sem-${mi}-${si}" style="display:${si===0?'block':'none'};padding-bottom:30px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:${mod.cor}">${sem.label}</div><div style="font-size:11px;color:#6B8AB0;background:rgba(255,255,255,.05);padding:3px 10px;border-radius:20px">${sem.total} presentes</div></div>${rankHTML}</div>`;
+      semanasConteudo+='<div id="sem-'+mi+'-'+si+'" style="display:'+(si===0?'block':'none')+';padding-bottom:16px">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+        +'<div style="font-size:13px;font-weight:700;color:'+cor+'">'+sem.label+'</div>'
+        +'<div style="font-size:11px;color:#6B8AB0;background:rgba(255,255,255,.05);padding:3px 10px;border-radius:20px">'+sem.total+' presentes</div></div>'
+        +rankHTML+'</div>';
     });
 
-    const semVazia = semsComDados.length===0
+    var semVazia = semsComDados.length===0
       ? '<div style="color:#6B8AB0;text-align:center;padding:48px 0;font-size:13px">Nenhuma semana com dados registrados</div>'
       : '';
 
-    modulosHTML += `
-      <div id="mod-${mi}" style="display:${mi===0?'block':'none'}">
-        <div style="padding:12px 14px 8px;border-bottom:1px solid #1E2E4A;background:#0A0F1E">
-          <div style="font-size:11px;color:#6B8AB0;margin-bottom:10px">${mod.totalAlunos} ativos · ${mod.nDesistentes} desistentes</div>
-          <div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none">
-            ${semBtnsHTML}
-          </div>
-        </div>
-        <div id="sems-${mi}" style="padding:14px 13px 10px">
-          ${semanasConteudo}${semVazia}
-        </div>
-      </div>`;
+    function st(txt){ return '<div style="font-size:14px;font-weight:700;color:#7EC8F0;margin-bottom:10px;margin-top:22px;padding-bottom:7px;border-bottom:1px solid #1E2E4A">'+txt+'</div>'; }
+    function cbox(inner){ return '<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:13px;margin-bottom:14px">'+inner+'</div>'; }
+
+    modulosHTML+='<div id="mod-'+mi+'" style="display:'+(mi===0?'block':'none')+'">'
+      +'<div style="padding:10px 14px 8px;border-bottom:1px solid #1E2E4A;background:#0A0F1E;position:sticky;top:44px;z-index:90">'
+      +'<div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none">'+semBtnsHTML+'</div></div>'
+      +'<div id="sems-'+mi+'" style="padding:14px 13px 4px">'+semanasConteudo+semVazia+'</div>'
+      +'<div style="padding:0 13px 36px">'
+      +st('&#128202; Dashboard')
+      +kpiHTML
+      +st('&#128200; Comparativo por Semana')
+      +cbox('<div style="font-size:10px;font-weight:700;color:#6B8AB0;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cada cor = uma semana</div>'
+        +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+legendHTML+'</div>'
+        +comparativoHTML)
+      +st('&#127885; Retencao Total por Equipe')
+      +cbox(retEquipeHTML)
+      +st('&#128101; Ativos x Desistentes por Equipe')
+      +cbox(ativosDesistHTML)
+      +'</div></div>';
   });
 
-  const JS = `
-function showMod(mi,btn){
-  var mods=document.getElementById('modulos').children;
-  for(var i=0;i<mods.length;i++) mods[i].style.display='none';
-  document.getElementById('mod-'+mi).style.display='block';
-  var tabs=btn.parentNode.children;
-  for(var i=0;i<tabs.length;i++){tabs[i].style.color='#6B8AB0';tabs[i].style.borderBottom='3px solid transparent';}
-  btn.style.color='#7EC8F0'; btn.style.borderBottom='3px solid '+btn.dataset.cor;
-  try{window.scrollTo(0,0);}catch(e){}
-}
-function showSem(mi,si,btn){
-  var cont=document.getElementById('sems-'+mi);
-  var children=cont.children;
-  for(var i=0;i<children.length;i++) children[i].style.display='none';
-  document.getElementById('sem-'+mi+'-'+si).style.display='block';
-  var par=btn.parentNode;
-  var btns=par.children;
-  for(var i=0;i<btns.length;i++){btns[i].style.background='rgba(255,255,255,0.06)';btns[i].style.color='#6B8AB0';}
-  btn.style.background=btn.dataset.cor; btn.style.color='#fff';
-  try{window.scrollTo(0,0);}catch(e){}
-}
-function tRA(uid){
-  var el=document.getElementById(uid);
-  var arr=document.getElementById('arr_'+uid);
-  if(!el)return;
-  var open=el.style.display==='block';
-  el.style.display=open?'none':'block';
-  if(arr)arr.textContent=open?'▼':'▲';
-}`;
+  var JS='function showMod(mi,btn){'
+    +'var mods=document.getElementById("modulos").children;'
+    +'for(var i=0;i<mods.length;i++) mods[i].style.display="none";'
+    +'document.getElementById("mod-"+mi).style.display="block";'
+    +'var tabs=btn.parentNode.children;'
+    +'for(var i=0;i<tabs.length;i++){tabs[i].style.color="#6B8AB0";tabs[i].style.borderBottom="3px solid transparent";}'
+    +'btn.style.color="#E8F0FF";btn.style.borderBottom="3px solid "+btn.dataset.cor;'
+    +'try{window.scrollTo(0,0);}catch(e){}}'
+    +'function showSem(mi,si,btn){'
+    +'var cont=document.getElementById("sems-"+mi);var ch=cont.children;'
+    +'for(var i=0;i<ch.length;i++) ch[i].style.display="none";'
+    +'document.getElementById("sem-"+mi+"-"+si).style.display="block";'
+    +'var par=btn.parentNode;var btns=par.children;'
+    +'for(var i=0;i<btns.length;i++){btns[i].style.background="rgba(255,255,255,0.06)";btns[i].style.color="#6B8AB0";}'
+    +'btn.style.background=btn.dataset.cor;btn.style.color="#fff";'
+    +'try{window.scrollTo(0,0);}catch(e){}}'
+    +'function tRA(uid){'
+    +'var el=document.getElementById(uid);var arr=document.getElementById("arr_"+uid);'
+    +'if(!el)return;var open=el.style.display==="block";'
+    +'el.style.display=open?"none":"block";if(arr)arr.textContent=open?"&#9660;":"&#9650;";}';
 
-  // injeta data-cor nos botões de semana via replace (simples e seguro)
-  // usamos dataset via atributo HTML direto
-  // já incluímos cor nos estilos inline acima; o JS usa btn.dataset.cor
-  // então precisamos adicionar data-cor em cada sbtn
-  let html = `<!DOCTYPE html><html lang="pt-BR"><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>${titulo}</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:#050A14;color:#E8F0FF;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;overflow-x:hidden}
-.header{background:linear-gradient(160deg,#071020,#0A1A40 60%,#071020);border-bottom:1px solid #1E2E4A;padding:20px 16px 16px;text-align:center}
-.header h1{font-size:21px;font-weight:900;color:#fff}
-.header h1 span{color:#7EC8F0}
-.header p{color:#6B8AB0;font-size:11px;margin-top:4px}
-.top-nav{display:flex;background:#0D1626;border-bottom:1px solid #1E2E4A;position:sticky;top:0;z-index:100}
-::-webkit-scrollbar{display:none}
-</style>
-</head>
-<body>
-<div class="header"><h1>Instituto de <span>Vencedores</span></h1><p>Gerado em ${dt}</p></div>
-<nav class="top-nav">${tabsHTML}</nav>
-<div id="modulos">${modulosHTML}</div>
-<script>${JS}<\/script>
-</body></html>`;
-
-  // adiciona data-cor em cada botão de semana
-  data.modulos.forEach(function(mod, mi){
-    var regex = new RegExp('id="sbtn-'+mi+'-', 'g');
-    html = html.replace(new RegExp('(id="sbtn-'+mi+'-\\d+")', 'g'), '$1 data-cor="'+mod.cor+'"');
-  });
-  // adiciona data-cor nas abas de módulo
-  data.modulos.forEach(function(mod, mi){
-    html = html.replace('id="tab-'+mi+'"', 'id="tab-'+mi+'" data-cor="'+mod.cor+'"');
-  });
-
-  return html;
+  return '<!DOCTYPE html><html lang="pt-BR"><head>'
+    +'<meta charset="UTF-8">'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'
+    +'<meta name="apple-mobile-web-app-capable" content="yes">'
+    +'<title>'+titulo+'</title>'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}'
+    +'body{background:#050A14;color:#E8F0FF;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;overflow-x:hidden;-webkit-text-size-adjust:100%}'
+    +'.header{background:linear-gradient(160deg,#071020,#0A1A40 60%,#071020);border-bottom:1px solid #1E2E4A;padding:22px 16px 16px;text-align:center;position:relative;overflow:hidden}'
+    +'.header::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(74,144,217,.18) 0%,transparent 70%)}'
+    +'.hbadge{display:inline-block;margin-bottom:8px;padding:3px 12px;border-radius:20px;border:1px solid rgba(74,144,217,.4);background:rgba(74,144,217,.1);font-size:10px;font-weight:600;letter-spacing:2px;color:#7EC8F0;text-transform:uppercase}'
+    +'.header h1{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px}'
+    +'.header h1 span{color:#7EC8F0}'
+    +'.hsub{color:#6B8AB0;font-size:11px}'
+    +'.top-nav{display:flex;background:#0D1626;border-bottom:1px solid #1E2E4A;position:sticky;top:0;z-index:100}'
+    +'::-webkit-scrollbar{display:none}'
+    +'</style>'
+    +'</head><body>'
+    +'<div class="header"><div class="hbadge">&#128203; Relatorio Mobile</div>'
+    +'<h1>Instituto de <span>Vencedores</span></h1>'
+    +'<p class="hsub">Gerado em '+dt+'</p></div>'
+    +'<nav class="top-nav">'+tabsHTML+'</nav>'
+    +'<div id="modulos">'+modulosHTML+'</div>'
+    +'<script>'+JS+'<\/script>'
+    +'</body></html>';
 }
+
 
 function gerarHTMLWeb(data, titulo){
   const dt=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
