@@ -3,6 +3,9 @@
   "public": true,
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/relatorio", "destination": "/relatorio.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
