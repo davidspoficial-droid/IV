@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instituto de Vencedores — Sistema de Gestão</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+  // ══ CONFIG FIREBASE ══
+  const firebaseConfig = {
+    apiKey: "AIzaSyCAbjeFpJCTfxB9MIsAkM0FYd0cv2OOGh0",
+    authDomain: "instituto-de-vencedores-iv.firebaseapp.com",
+    projectId: "instituto-de-vencedores-iv",
+    storageBucket: "instituto-de-vencedores-iv.firebasestorage.app",
+    messagingSenderId: "576601736407",
+    appId: "1:576601736407:web:49bf141159071bf6a2dc92",
+    measurementId: "G-956ZTG8WM0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db  = getFirestore(app);
+  const DOC_REF = doc(db, "sistema", "dados");
+
+  // Expõe funções ao escopo global para o app usar
+  window._firebase = {
+    async load() {
+      try {
+        const snap = await getDoc(DOC_REF);
+        return snap.exists() ? snap.data() : null;
+      } catch(e) {
+        console.error("Firebase load error:", e);
+        return null;
+      }
+    },
+    async save(data) {
+      try {
+        await setDoc(DOC_REF, data);
+        return true;
+      } catch(e) {
+        console.error("Firebase save error:", e);
+        return false;
+      }
+    },
+    onSnapshot(callback) {
+      return onSnapshot(DOC_REF, (snap) => {
+        if (snap.exists()) callback(snap.data());
+      });
+    }
+  };
+
+  // Avisa o app quando o Firebase estiver pronto
+  window._firebaseReady = true;
+  document.dispatchEvent(new Event("firebase-ready"));
+</script>
+<style>
+:root {
+  --navy:  #050A14; --navy2: #0D1626; --navy3: #111D33;
+  --border:#1E2E4A; --blue:  #4A90D9; --blue-l:#7EC8F0;
+  --green: #3EC97A; --green-l:#7EDBA8; --red:#E05555;
+  --purple:#9B59B6; --text:  #E8F0FF; --muted: #6B8AB0;
+  --r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--navy);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* ── LOADING OVERLAY ── */
+#loading-overlay{position:fixed;inset:0;background:var(--navy);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  transition:opacity .4s;}
+#loading-overlay.hide{opacity:0;pointer-events:none;}
+.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--blue);
+  border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-family:'Playfair Display',serif;font-size:20px;color:var(--blue-l);}
+.loading-sub{font-size:13px;color:var(--muted);}
+
+/* ── SYNC INDICATOR ── */
+#sync-badge{position:fixed;bottom:70px;right:24px;z-index:800;
+  background:var(--navy2);border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px;font-size:11px;font-weight:600;display:none;align-items:center;gap:6px;}
+#sync-badge.saving{display:flex;color:#F39C12;border-color:#F39C12;}
+#sync-badge.saved{display:flex;color:var(--green);border-color:var(--green);}
+#sync-badge.error{display:flex;color:var(--red);border-color:var(--red);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(160deg,#071020,#0A1A40 60%,#071020);
+  border-bottom:1px solid var(--border);padding:24px 20px;display:flex;
+  align-items:center;gap:16px;position:sticky;top:0;z-index:200;}
+.header-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;}
+.header-logo span{color:var(--blue-l);}
+.header-badge{background:rgba(74,144,217,.15);border:1px solid rgba(74,144,217,.3);
+  color:var(--blue-l);font-size:10px;font-weight:700;letter-spacing:2px;
+  padding:3px 10px;border-radius:20px;text-transform:uppercase;}
+.header-right{margin-left:auto;display:flex;gap:8px;}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;
+  border:none;transition:all .2s;font-family:'DM Sans',sans-serif;display:inline-flex;
+  align-items:center;gap:6px;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#3a7bc8;}
+.btn-green{background:var(--green);color:#000;}
+.btn-green:hover{background:#2db568;}
+.btn-red{background:rgba(224,85,85,.15);color:var(--red);border:1px solid rgba(224,85,85,.3);}
+.btn-red:hover{background:rgba(224,85,85,.25);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--border);color:var(--text);}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
+.btn-xs{padding:4px 9px;font-size:11px;border-radius:6px;}
+.row-sel{background:rgba(74,144,217,.08)!important;}
+.row-sel:hover{background:rgba(74,144,217,.13)!important;}
+
+/* ── DASHBOARD EQUIPES TABLE ── */
+.dash-eq-table { width:100%; border-collapse:collapse; font-size:13px; }
+.dash-eq-table th { background:var(--navy3); color:var(--blue-l); font-size:10px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; padding:8px 12px; text-align:left;
+  border-bottom:1px solid var(--border); white-space:nowrap; }
+.dash-eq-table td { padding:8px 12px; border-bottom:1px solid rgba(30,46,74,.5); vertical-align:middle; }
+#tb-presenca td { padding:6px 10px; vertical-align:middle; }
+#tb-presenca th { padding:8px 10px; }
+.dash-eq-table tr:last-child td { border-bottom:none; }
+.dash-eq-table tr:hover td { background:rgba(74,144,217,.05); }
+.ret-bar-bg { height:5px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:3px; min-width:60px; }
+.ret-bar-fill { height:100%; border-radius:3px; }
+.ret-pct { font-size:12px; font-weight:700; }
+.mod-block { background:var(--navy2); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:10px; }
+
+/* ── MAIN NAV ── */
+.main-nav{display:flex;gap:2px;padding:12px 20px;background:var(--navy2);
+  border-bottom:1px solid var(--border);overflow-x:auto;}
+.main-nav::-webkit-scrollbar{display:none;}
+.mnav{padding:8px 16px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;
+  border:none;background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap;}
+.mnav.active{background:var(--blue);color:#fff;font-weight:700;}
+.mnav:hover:not(.active){background:var(--border);color:var(--text);}
+
+/* ── PAGE ── */
+.page{display:none;padding:24px 20px;max-width:1100px;margin:0 auto;}
+.page.active{display:block;}
+
+/* ── SECTION TITLE ── */
+.stitle{font-family:'Playfair Display',serif;font-size:18px;color:var(--blue-l);
+  margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;}
+.stitle small{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);font-weight:400;}
+
+/* ── CARDS ── */
+.card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;}
+.card-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:14px;}
+
+/* ── FORM ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.tri{grid-template-columns:1fr 1fr 1fr;}
+.form-row.solo{grid-template-columns:1fr;}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;}
+input,select,textarea{width:100%;padding:10px 13px;border-radius:9px;background:var(--navy3);
+  border:1px solid var(--border);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;
+  outline:none;transition:border .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);}
+input::placeholder,textarea::placeholder{color:var(--muted);}
+select option{background:var(--navy3);}
+textarea{resize:vertical;min-height:80px;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--navy3);color:var(--blue-l);font-weight:600;padding:10px 14px;border-top:2px solid var(--border);
+  text-align:left;border-bottom:1px solid var(--border);font-size:11px;
+  letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(74,144,217,.05);}
+tbody td{padding:9px 14px;vertical-align:middle;}
+
+/* ── PRESENÇA GRID ── */
+.pres-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(32px,1fr));gap:4px;margin-top:4px;}
+.pres-dot{width:36px;height:32px;border-radius:7px;border:1px solid var(--border);
+  background:var(--navy3);cursor:pointer;font-size:16px;display:flex;
+  align-items:center;justify-content:center;transition:all .15s;user-select:none;}
+.pres-dot.sim{background:rgba(62,201,122,.2);border-color:var(--green);}
+.pres-dot.nao{background:rgba(224,85,85,.1);border-color:rgba(224,85,85,.3);}
+
+/* ── BADGE ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-b{background:rgba(74,144,217,.15);color:var(--blue-l);}
+.badge-g{background:rgba(62,201,122,.15);color:var(--green);}
+.badge-r{background:rgba(224,85,85,.15);color:var(--red);}
+.badge-p{background:rgba(155,89,182,.15);color:#C39BD3;}
+
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;}
+.kpi{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;text-align:center;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.kpi.b::after{background:linear-gradient(90deg,var(--blue),var(--blue-l));}
+.kpi.g::after{background:linear-gradient(90deg,var(--green),var(--green-l));}
+.kpi.p::after{background:linear-gradient(90deg,var(--purple),#C39BD3);}
+.kpi.r::after{background:linear-gradient(90deg,var(--red),#F08080);}
+.kpi.r .kpi-num{color:#F08080;}
+.kpi-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;line-height:1;}
+.kpi.b .kpi-num{color:var(--blue-l);} .kpi.g .kpi-num{color:var(--green);} .kpi.p .kpi-num{color:#C39BD3;}
+.kpi-lbl{font-size:10px;color:var(--muted);margin-top:5px;letter-spacing:1px;text-transform:uppercase;}
+
+/* ── TABS inside page ── */
+.ptabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+.ptab{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;}
+.ptab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
+  align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:16px;
+  padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--blue-l);margin-bottom:18px;}
+
+/* ── SEMANA SELECTOR ── */
+.sem-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.sem-chip{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;}
+.sem-chip.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy2);border:1px solid var(--green);
+  color:var(--green);padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;
+  z-index:999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ── EXPORT AREA ── */
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.export-card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);
+  padding:24px;text-align:center;cursor:pointer;transition:all .2s;}
+.export-card:hover{border-color:var(--blue);transform:translateY(-2px);}
+.export-icon{font-size:40px;margin-bottom:12px;}
+.export-name{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.export-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+
+@media(max-width:600px){
+  .form-row,.form-row.tri{grid-template-columns:1fr;}
+  .export-grid{grid-template-columns:1fr;}
+  .page{padding:16px 12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-txt">Instituto de <span style="color:var(--blue-l)">Vencedores</span></div>
+  <div class="loading-sub">Carregando dados...</div>
+</div>
+
+<!-- SYNC BADGE -->
+<div id="sync-badge">
+  <div class="sync-dot"></div>
+  <span id="sync-txt">Salvando...</span>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-logo">Instituto de <span>Vencedores</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px">Sistema de Gestão de Presença</div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost btn-sm" onclick="exportarDados()">💾 Salvar Backup</button>
+    <button class="btn btn-blue btn-sm" onclick="showPage('exportar')">📤 Gerar Relatório</button>
+  </div>
+</div>
+
+<!-- MAIN NAV -->
+<nav class="main-nav">
+  <button class="mnav active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+  <button class="mnav" onclick="showPage('alunos',this)">🎓 Alunos</button>
+  <button class="mnav" onclick="showPage('equipes',this)">👥 Equipes</button>
+  <button class="mnav" onclick="showPage('presenca',this)">✅ Presença</button>
+  <button class="mnav" onclick="showPage('exportar',this)">📤 Gerar Relatório</button>
+</nav>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="page-dashboard" class="page active">
+  <div class="kpi-row" id="dash-kpis"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div>
+      <div class="stitle">Alunos Ativos por Módulo</div>
+      <div id="dash-mod-alunos"></div>
+    </div>
+    <div>
+      <div class="stitle">Ativos × Desistentes por Módulo</div>
+      <div id="dash-ativos-desist"></div>
+    </div>
+  </div>
+  <div class="stitle">Presença por Equipe em Cada Semana</div>
+  <div id="dash-ret-semana-equipe"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+    <div>
+      <div class="stitle">Retenção Total por Equipe</div>
+      <div id="dash-ret-total-eq"></div>
+    </div>
+    <div>
+      <div class="stitle">Ativos × Desistentes por Equipe</div>
+      <div id="dash-eq-situacao"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ALUNOS ══ -->
+<div id="page-alunos" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+    <div class="stitle" style="margin:0">Cadastro de Alunos</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="openImportModal()">📋 Importar Lista</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleSelecionarTodos()" id="btn-sel-todos">☑️ Selecionar Todos</button>
+      <button class="btn btn-red btn-sm" id="btn-excluir-sel" style="display:none" onclick="excluirSelecionados()">🗑️ Excluir Selecionados (<span id="count-sel">0</span>)</button>
+      <button class="btn btn-ghost btn-sm" onclick="openAvancarModuloModal()" title="Avançar alunos de um módulo para o próximo">⬆️ Avançar Módulo</button>
+      <button class="btn btn-blue btn-sm" onclick="openAlunoModal()">+ Novo Aluno</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input id="busca-aluno" style="flex:1;min-width:200px" placeholder="🔍 Buscar aluno..." oninput="renderAlunos()">
+      <select id="filtro-equipe" style="width:180px" onchange="renderAlunos()">
+        <option value="">Todas as equipes</option>
+      </select>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" id="chk-all" onchange="toggleCheckAll(this)" style="cursor:pointer;accent-color:var(--blue)"></th>
+        <th>#</th><th>Nº Insc.</th><th>Nome</th><th>Equipe</th><th>Módulo</th><th>Situação</th><th>Ações</th>
+      </tr></thead>
+      <tbody id="tb-alunos"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ EQUIPES ══ -->
+<div id="page-equipes" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div class="stitle" style="margin:0">Gerenciar Equipes</div>
+    <button class="btn btn-blue btn-sm" onclick="openEquipeModal()">+ Nova Equipe</button>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Nome da Equipe</th><th>Alunos</th><th>Módulo</th><th>Ações</th></tr></thead>
+      <tbody id="tb-equipes"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ PRESENÇA ══ -->
+<div id="page-presenca" class="page">
+  <div class="stitle">Registro de Presença</div>
+  <div class="card">
+    <div class="form-row tri">
+      <div>
+        <label>Módulo</label>
+        <select id="pres-modulo" onchange="updatePresencaUI()">
+          <option value="1">1º Módulo</option>
+          <option value="2">2º Módulo</option>
+          <option value="3">3º Módulo</option>
+        </select>
+      </div>
+      <div>
+        <label>Semana</label>
+        <select id="pres-semana" onchange="onSemanaChange()"></select>
+      </div>
+      <div>
+        <label>Equipe (opcional)</label>
+        <select id="pres-equipe-filtro" onchange="renderPresencaTabela()">
+          <option value="">Todas as equipes</option>
+        </select>
+      </div>
+    </div>
+    <div id="pres-aulas-info" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+  </div>
+  <div class="card" style="margin-bottom:0;padding:10px 16px">
+    <input id="pres-busca" style="width:100%;padding:9px 13px;border-radius:9px;background:var(--navy3);border:1px solid var(--border);color:var(--text);font-size:13px;outline:none;font-family:'DM Sans',sans-serif" placeholder="🔍 Buscar aluno pelo nome..." oninput="renderPresencaTabela()">
+  </div>
+  <div style="display:flex;gap:8px;margin-top:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-green btn-sm" onclick="marcarTodos(true)">✅ Marcar Todos Presentes</button>
+    <button class="btn btn-red btn-sm" onclick="marcarTodos(false)">❌ Marcar Todos Ausentes</button>
+    <span id="pres-contador" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
+  </div>
+  <div class="tbl-wrap">
+    <table id="tbl-presenca-wrap">
+      <thead>
+        <tr>
+          <th style="width:70px">Nº Insc.</th>
+          <th>Nome</th>
+          <th>Equipe</th>
+          <th id="th-a1" style="text-align:center;width:80px">Aula 1</th>
+          <th id="th-a2" style="text-align:center;width:80px">Aula 2</th>
+          <th style="text-align:center;width:60px">Total</th>
+        </tr>
+      </thead>
+      <tbody id="tb-presenca"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ EXPORTAR ══ -->
+<div id="page-exportar" class="page">
+  <div class="stitle">📤 Gerar Relatório</div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="form-row">
+      <div>
+        <label>Título do Relatório</label>
+        <input id="exp-titulo" placeholder="Instituto de Vencedores" value="Instituto de Vencedores">
+      </div>
+      <div>
+        <label>Módulo</label>
+        <select id="exp-modulo">
+          <option value="todos">Todos os Módulos</option>
+          <option value="1">1º Módulo</option>
+          <option value="2">2º Módulo</option>
+          <option value="3">3º Módulo</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label>Dispositivo de destino</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        <button class="ptab active" id="tab-android" onclick="setDisp('android',this)">📱 Android</button>
+        <button class="ptab" id="tab-iphone" onclick="setDisp('iphone',this)">🍎 iPhone</button>
+      </div>
+    </div>
+  </div>
+  <div class="export-grid">
+    <div class="export-card" onclick="gerarRelatorio('mobile')">
+      <div class="export-icon">📱</div>
+      <div class="export-name">Relatório Mobile</div>
+      <div class="export-desc">HTML otimizado para celular. Envie pelo WhatsApp e abra no navegador.</div>
+    </div>
+    <div class="export-card" onclick="gerarRelatorio('web')">
+      <div class="export-icon">💻</div>
+      <div class="export-name">Relatório Desktop</div>
+      <div class="export-desc">HTML completo para visualização no computador.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">💾 Backup de Dados</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-ghost" onclick="exportarDados()">⬇️ Baixar Backup JSON</button>
+      <label class="btn btn-ghost" style="cursor:pointer">
+        ⬆️ Carregar Backup
+        <input type="file" accept=".json" style="display:none" onchange="importarDados(this)">
+      </label>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:10px">
+      O backup salva todos os alunos, equipes e presenças. Os dados também ficam salvos automaticamente no Firebase (nuvem).
+    </p>
+  </div>
+</div>
+
+<!-- ══ MODAL AVANÇAR MÓDULO ══ -->
+<div class="modal-bg" id="modal-avancar">
+  <div class="modal">
+    <div class="modal-title">⬆️ Avançar Alunos de Módulo</div>
+    <div style="background:var(--navy3);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--muted);line-height:1.6">
+      Esta ação move os alunos ativos de um módulo para o próximo.<br>
+      <span style="color:var(--blue-l)">Exemplo: alunos do <strong>1º Módulo</strong> passam para o <strong>2º Módulo</strong>.</span><br>
+      <span style="color:var(--green);font-size:12px">✅ Apenas alunos com situação <strong>ATIVO</strong> serão avançados.</span>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Módulo de Origem</label>
+        <select id="avancar-origem">
+          <option value="1">1º Módulo → 2º Módulo</option>
+          <option value="2">2º Módulo → 3º Módulo</option>
+        </select>
+      </div>
+    </div>
+    <div id="avancar-preview" style="margin-top:12px;padding:10px 14px;background:var(--navy3);border-radius:9px;border:1px solid var(--border);font-size:12px;display:none"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-avancar')">Cancelar</button>
+      <button class="btn btn-ghost btn-sm" onclick="previewAvancar()">👁️ Ver alunos afetados</button>
+      <button class="btn btn-blue" onclick="confirmarAvancar()">⬆️ Avançar Módulo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL ALUNO ══ -->
+<div class="modal-bg" id="modal-aluno">
+  <div class="modal">
+    <div class="modal-title" id="modal-aluno-title">Novo Aluno</div>
+    <div class="form-row">
+      <div><label>Nome Completo</label><input id="al-nome" placeholder="Nome do aluno"></div>
+      <div><label>Nº de Inscrição</label><input id="al-inscricao" placeholder="Ex: 123456" type="text"></div>
+    </div>
+    <div class="form-row tri">
+      <div>
+        <label>Equipe</label>
+        <select id="al-equipe"><option value="">Sem equipe</option></select>
+      </div>
+      <div>
+        <label>Módulo</label>
+        <select id="al-modulo">
+          <option value="1">1º Módulo</option>
+          <option value="2">2º Módulo</option>
+          <option value="3">3º Módulo</option>
+        </select>
+      </div>
+      <div>
+        <label>Situação</label>
+        <select id="al-situacao">
+          <option value="ATIVO">Ativo</option>
+          <option value="DESISTENTE">Desistente</option>
+          <option value="INATIVO">Inativo</option>
+          <option value="TRANCADO">Trancado</option>
+        </select>
+      </div>
+    </div>
+    <input type="hidden" id="al-id">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-aluno')">Cancelar</button>
+      <button class="btn btn-blue" onclick="salvarAluno()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL EQUIPE ══ -->
+<div class="modal-bg" id="modal-equipe">
+  <div class="modal">
+    <div class="modal-title" id="modal-equipe-title">Nova Equipe</div>
+    <div class="form-row solo"><div><label>Nome da Equipe</label><input id="eq-nome" placeholder="Ex: Ousados"></div></div>
+    <div class="form-row solo">
+      <div>
+        <label>Módulo</label>
+        <select id="eq-modulo">
+          <option value="1">1º Módulo</option>
+          <option value="2">2º Módulo</option>
+          <option value="3">3º Módulo</option>
+          <option value="todos">Todos os Módulos</option>
+        </select>
+      </div>
+    </div>
+    <input type="hidden" id="eq-id">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-equipe')">Cancelar</button>
+      <button class="btn btn-blue" onclick="salvarEquipe()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL IMPORTAR ══ -->
+<div class="modal-bg" id="modal-import">
+  <div class="modal">
+    <div class="modal-title">Importar Lista de Alunos</div>
+    <div style="background:var(--navy3);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:16px;font-size:12px;line-height:1.9;color:var(--muted)">
+      <strong style="color:var(--blue-l);display:block;margin-bottom:4px">📋 Formatos aceitos (um por linha):</strong>
+      <code style="color:var(--text)">Breno</code> — só o nome (vai para Módulo 1)<br>
+      <code style="color:var(--text)">Breno;Ousados</code> — nome e equipe<br>
+      <code style="color:var(--text)">Breno;Ousados;123456</code> — nome, equipe e nº inscrição<br>
+      <code style="color:var(--text);background:rgba(74,144,217,.1);padding:1px 5px;border-radius:4px">2;Breno;Ousados;123456</code> — <strong style="color:var(--blue-l)">módulo</strong> · nome · equipe · inscrição<br>
+      <span style="color:var(--green);font-size:11px">✅ Colocar 1, 2 ou 3 no início define o módulo. Sem informar → Módulo 1.</span>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>Marcar presença na semana (opcional)</label>
+        <select id="imp-semana"><option value="">Não marcar presença</option></select>
+      </div>
+      <div>
+        <label>Equipe padrão (sem ";" na linha)</label>
+        <select id="imp-equipe"><option value="">Sem equipe</option></select>
+      </div>
+    </div>
+    <div class="form-row solo">
+      <div>
+        <label>Cole a lista abaixo</label>
+        <textarea id="imp-nomes" style="min-height:140px" placeholder="1;Breno;Ousados;123456&#10;2;Carla;Determinados;789012&#10;Maria"></textarea>
+      </div>
+    </div>
+    <div id="imp-preview" style="display:none;background:var(--navy3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-top:8px;font-size:12px;max-height:160px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="closeModal('modal-import')">Cancelar</button>
+      <button class="btn btn-ghost btn-sm" onclick="previewImport()">👁️ Pré-visualizar</button>
+      <button class="btn btn-blue" onclick="importarAlunos()">✅ Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// ESTRUTURA DE DADOS
+// ══════════════════════════════════════════
+const MODULOS = {
+  1: {
+    nome:"1º Módulo", cor:"#4A90D9",
+    semanas:[
+      {label:"Semana 01 — Aula Inaugural", aulas:["INAU"]},
+      {label:"Semana 02", aulas:[1,2]},
+      {label:"Semana 03", aulas:[3,4]},
+      {label:"Semana 04", aulas:[5,6]},
+      {label:"Semana 05", aulas:[7,8]},
+      {label:"Semana 06", aulas:[9,10]},
+      {label:"Semana 07", aulas:[11,12]},
+      {label:"Semana 08", aulas:[13,14]},
+      {label:"Semana 09", aulas:[15,16]},
+      {label:"Semana 10", aulas:[17,18]},
+      {label:"Semana 11", aulas:[19,20]},
+      {label:"Semana 12 — Apresentação", aulas:["AP"]},
+    ]
+  },
+  2: {
+    nome:"2º Módulo", cor:"#3EC97A",
+    semanas:[
+      {label:"Semana 01 — Aula Inaugural", aulas:["INAU"]},
+      {label:"Semana 02", aulas:[1,2]},
+      {label:"Semana 03", aulas:[3,4]},
+      {label:"Semana 04", aulas:[5,6]},
+      {label:"Semana 05", aulas:[7,8]},
+      {label:"Semana 06", aulas:[9,10]},
+      {label:"Semana 07", aulas:[11,12]},
+      {label:"Semana 08", aulas:[13,14]},
+      {label:"Semana 09", aulas:[15,16]},
+      {label:"Semana 10", aulas:[17,18]},
+      {label:"Semana 11", aulas:[19,20]},
+      {label:"Semana 12 — Apresentação", aulas:["AP"]},
+    ]
+  },
+  3: {
+    nome:"3º Módulo", cor:"#E05555",
+    semanas:[
+      {label:"Semana 01 — Aula Inaugural", aulas:["INAU"]},
+      {label:"Semana 02", aulas:[1,2]},
+      {label:"Semana 03", aulas:[3,4]},
+      {label:"Semana 04", aulas:[5,6]},
+      {label:"Semana 05", aulas:[7,8]},
+      {label:"Semana 06", aulas:[9,10]},
+      {label:"Semana 07", aulas:[11,12]},
+      {label:"Semana 08", aulas:[13,14]},
+      {label:"Semana 09", aulas:[15,16]},
+      {label:"Semana 10", aulas:[17,18]},
+      {label:"Semana 11", aulas:[19,20]},
+      {label:"Semana 12 — Apresentação", aulas:["AP"]},
+    ]
+  }
+};
+
+let DB = {
+  alunos: [],
+  equipes: [],
+  presencas: {}
+};
+let nextId = 1;
+let _saveTimeout = null;
+let _ignoreSnapshot = false;
+
+// ══ SYNC BADGE ══
+function showSync(state, txt){
+  const badge = document.getElementById('sync-badge');
+  const t = document.getElementById('sync-txt');
+  badge.className = 'sync-badge ' + state;
+  badge.style.display = 'flex';
+  t.textContent = txt;
+  if(state === 'saved'){
+    setTimeout(()=>{ badge.style.display='none'; }, 2500);
+  }
+}
+
+// ══ LOAD/SAVE — Firebase ══
+async function loadDB(){
+  const overlay = document.getElementById('loading-overlay');
+  try {
+    // Aguarda Firebase estar pronto
+    if(!window._firebaseReady){
+      await new Promise(res => document.addEventListener('firebase-ready', res, {once:true}));
+    }
+    const data = await window._firebase.load();
+    if(data){
+      DB = data;
+      nextId = DB._nextId || 1;
+    }
+  } catch(e){
+    console.warn('Firebase load falhou, usando estado vazio:', e);
+  }
+  // Esconde loading
+  overlay.classList.add('hide');
+  setTimeout(()=>overlay.style.display='none', 400);
+  // Renderiza tudo
+  renderDashboard();
+  renderAlunos();
+  renderEquipes();
+  refreshEquipeSelects();
+  initPresenca();
+
+  // Ouve mudanças em tempo real (multi-dispositivo)
+  if(window._firebase && window._firebase.onSnapshot){
+    window._firebase.onSnapshot((remoteData) => {
+      if(_ignoreSnapshot) return;
+      DB = remoteData;
+      nextId = DB._nextId || 1;
+      renderDashboard();
+      renderAlunos();
+      renderEquipes();
+      refreshEquipeSelects();
+    });
+  }
+}
+
+function saveDB(){
+  DB._nextId = nextId;
+  _ignoreSnapshot = true;
+  showSync('saving', '☁️ Salvando...');
+  clearTimeout(_saveTimeout);
+  _saveTimeout = setTimeout(async () => {
+    const ok = await window._firebase.save(DB);
+    if(ok){
+      showSync('saved', '✅ Salvo');
+    } else {
+      showSync('error', '❌ Erro ao salvar');
+      toast('Erro ao salvar no Firebase!', true);
+    }
+    setTimeout(()=>{ _ignoreSnapshot = false; }, 500);
+  }, 600); // debounce 600ms para não disparar a cada clique
+}
+
+function newId(){ return nextId++; }
+
+// ══ TOAST ══
+function toast(msg, isError=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? '#E05555' : '#3EC97A';
+  t.style.color = isError ? '#E05555' : '#3EC97A';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ══ NAVEGAÇÃO ══
+function showPage(name, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.mnav').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.mnav').forEach(b=>{
+      if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+name+"'")) b.classList.add('active');
+    });
+  }
+  if(name==='dashboard') renderDashboard();
+  if(name==='alunos') renderAlunos();
+  if(name==='equipes') renderEquipes();
+  if(name==='presenca') initPresenca();
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+
+// ══════════════════════════════════════════
+// EQUIPES
+// ══════════════════════════════════════════
+function openEquipeModal(id=null){
+  document.getElementById('eq-id').value = id||'';
+  if(id){
+    const eq = DB.equipes.find(e=>e.id===id);
+    document.getElementById('modal-equipe-title').textContent='Editar Equipe';
+    document.getElementById('eq-nome').value=eq.nome;
+    document.getElementById('eq-modulo').value=eq.modulo;
+  } else {
+    document.getElementById('modal-equipe-title').textContent='Nova Equipe';
+    document.getElementById('eq-nome').value='';
+    document.getElementById('eq-modulo').value='1';
+  }
+  openModal('modal-equipe');
+}
+
+function salvarEquipe(){
+  const nome = document.getElementById('eq-nome').value.trim();
+  if(!nome){ toast('Digite o nome da equipe', true); return; }
+  const modulo = document.getElementById('eq-modulo').value;
+  const id = document.getElementById('eq-id').value;
+  if(id){
+    const eq = DB.equipes.find(e=>e.id==id);
+    eq.nome=nome; eq.modulo=modulo;
+  } else {
+    DB.equipes.push({id:newId(), nome, modulo});
+  }
+  saveDB(); closeModal('modal-equipe'); renderEquipes(); refreshEquipeSelects();
+  toast('Equipe salva! ✓');
+}
+
+function deletarEquipe(id){
+  if(!confirm('Remover esta equipe? Os alunos ficarão sem equipe.')) return;
+  DB.equipes = DB.equipes.filter(e=>e.id!==id);
+  DB.alunos.forEach(a=>{ if(a.equipeId===id) a.equipeId=null; });
+  saveDB(); renderEquipes(); renderAlunos(); refreshEquipeSelects();
+  toast('Equipe removida.');
+}
+
+function renderEquipes(){
+  const tb = document.getElementById('tb-equipes');
+  if(!DB.equipes.length){
+    tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">Nenhuma equipe cadastrada</td></tr>'; return;
+  }
+  tb.innerHTML = DB.equipes.map((eq,i)=>{
+    const alunos = DB.alunos.filter(a=>a.equipeId===eq.id).length;
+    const mod = eq.modulo==='todos'?'Todos':MODULOS[eq.modulo]&&MODULOS[eq.modulo].nome||eq.modulo;
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><strong>${eq.nome}</strong></td>
+      <td><span class="badge badge-b">${alunos} aluno${alunos!==1?'s':''}</span></td>
+      <td><span class="badge badge-p">${mod}</span></td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" onclick="openEquipeModal(${eq.id})">✏️ Editar</button>
+        <button class="btn btn-red btn-xs" onclick="deletarEquipe(${eq.id})">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// ALUNOS
+// ══════════════════════════════════════════
+function openAlunoModal(id=null){
+  refreshEquipeSelects();
+  document.getElementById('al-id').value=id||'';
+  if(id){
+    const al=DB.alunos.find(a=>a.id===id);
+    document.getElementById('modal-aluno-title').textContent='Editar Aluno';
+    document.getElementById('al-nome').value=al.nome;
+    document.getElementById('al-inscricao').value=al.inscricao||'';
+    document.getElementById('al-equipe').value=al.equipeId||'';
+    document.getElementById('al-modulo').value=al.modulo||'1';
+    document.getElementById('al-situacao').value=al.situacao||'ATIVO';
+  } else {
+    document.getElementById('modal-aluno-title').textContent='Novo Aluno';
+    document.getElementById('al-nome').value='';
+    document.getElementById('al-inscricao').value='';
+    document.getElementById('al-equipe').value='';
+    document.getElementById('al-modulo').value='1';
+    document.getElementById('al-situacao').value='ATIVO';
+  }
+  openModal('modal-aluno');
+}
+
+function salvarAluno(){
+  const nome=document.getElementById('al-nome').value.trim();
+  if(!nome){ toast('Digite o nome do aluno', true); return; }
+  const inscricao = document.getElementById('al-inscricao').value.trim();
+  const equipeId  = document.getElementById('al-equipe').value||null;
+  const modulo    = document.getElementById('al-modulo').value||'1';
+  const situacao  = document.getElementById('al-situacao').value;
+  const id        = document.getElementById('al-id').value;
+  if(id){
+    const al=DB.alunos.find(a=>a.id==id);
+    al.nome=nome; al.inscricao=inscricao; al.modulo=modulo;
+    al.equipeId=equipeId?parseInt(equipeId):null; al.situacao=situacao;
+  } else {
+    DB.alunos.push({id:newId(), nome, inscricao, modulo, equipeId:equipeId?parseInt(equipeId):null, situacao:'ATIVO'});
+  }
+  saveDB(); closeModal('modal-aluno'); renderAlunos(); renderDashboard(); toast('Aluno salvo! ✓');
+}
+
+function openAvancarModuloModal(){
+  document.getElementById('avancar-preview').style.display='none';
+  openModal('modal-avancar');
+}
+
+function getAlunosParaAvancar(){
+  const origem = document.getElementById('avancar-origem').value;
+  const destino = String(parseInt(origem)+1);
+  const ativos = DB.alunos.filter(a=>(a.modulo||'1')==origem && (a.situacao||'ATIVO')==='ATIVO');
+  return {ativos, origem, destino};
+}
+
+function previewAvancar(){
+  const {ativos, origem, destino} = getAlunosParaAvancar();
+  const prev = document.getElementById('avancar-preview');
+  if(!ativos.length){
+    prev.innerHTML = `<span style="color:var(--muted)">Nenhum aluno ativo no ${MODULOS[origem].nome}.</span>`;
+  } else {
+    prev.innerHTML = `<strong style="color:var(--blue-l)">${ativos.length} aluno(s)</strong> serão movidos do <strong>${MODULOS[origem].nome}</strong> para o <strong>${MODULOS[destino].nome}</strong>:<br><br>`
+      + ativos.map(a=>{
+          const eq = DB.equipes.find(e=>e.id===a.equipeId);
+          return `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;background:rgba(74,144,217,.1);border-radius:12px;color:var(--text);font-size:11px">${a.nome}${eq?' · '+eq.nome:''}</span>`;
+        }).join('');
+  }
+  prev.style.display='block';
+}
+
+function confirmarAvancar(){
+  const {ativos, origem, destino} = getAlunosParaAvancar();
+  if(!ativos.length){ toast(`Nenhum aluno ativo no ${MODULOS[origem].nome}.`, true); return; }
+  if(!confirm(`Mover ${ativos.length} aluno(s) do ${MODULOS[origem].nome} para o ${MODULOS[destino].nome}?`)) return;
+  ativos.forEach(al=>{ al.modulo = destino; });
+  saveDB();
+  closeModal('modal-avancar');
+  renderAlunos();
+  renderDashboard();
+  toast(`✅ ${ativos.length} aluno(s) avançados para o ${MODULOS[destino].nome}!`);
+}
+
+function marcarDesistente(id){
+  if(!confirm('Marcar este aluno como Desistente?')) return;
+  const al=DB.alunos.find(a=>a.id===id);
+  if(al){ al.situacao='DESISTENTE'; saveDB(); renderAlunos(); renderDashboard(); toast('Aluno marcado como Desistente.'); }
+}
+function reativarAluno(id){
+  const al=DB.alunos.find(a=>a.id===id);
+  if(al){ al.situacao='ATIVO'; saveDB(); renderAlunos(); renderDashboard(); toast('Aluno reativado! ✓'); }
+}
+
+function deletarAluno(id){
+  if(!confirm('Remover este aluno?')) return;
+  DB.alunos=DB.alunos.filter(a=>a.id!==id);
+  Object.keys(DB.presencas).forEach(k=>{ if(k.startsWith(id+'_')) delete DB.presencas[k]; });
+  saveDB(); renderAlunos(); toast('Aluno removido.');
+}
+
+let _selectedIds = new Set();
+
+function renderAlunos(){
+  const _ba=document.getElementById('busca-aluno'); const busca=(_ba&&_ba.value||'').toLowerCase();
+  const _fe=document.getElementById('filtro-equipe'); const fEq=_fe&&_fe.value;
+  let lista=DB.alunos;
+  if(busca) lista=lista.filter(a=>a.nome.toLowerCase().includes(busca));
+  if(fEq)   lista=lista.filter(a=>a.equipeId==fEq);
+
+  const tb=document.getElementById('tb-alunos');
+  if(!lista.length){
+    tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno encontrado</td></tr>'; return;
+  }
+  tb.innerHTML=lista.map((al,i)=>{
+    const eq=DB.equipes.find(e=>e.id===al.equipeId);
+    const sitCl=al.situacao==='ATIVO'?'badge-g':al.situacao==='DESISTENTE'?'badge-r':al.situacao==='INATIVO'?'badge-r':'badge-p';
+    const checked=_selectedIds.has(al.id)?'checked':'';
+    return `<tr class="${_selectedIds.has(al.id)?'row-sel':''}">
+      <td style="text-align:center"><input type="checkbox" ${checked} class="chk-aluno" data-id="${al.id}"
+        onchange="toggleSelAluno(${al.id},this)" style="cursor:pointer;accent-color:var(--blue)"></td>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="color:var(--muted);font-size:12px">${al.inscricao||'—'}</td>
+      <td><strong>${al.nome}</strong></td>
+      <td>${eq?`<span class="badge badge-b">${eq.nome}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
+      <td><span class="badge badge-p" style="font-size:10px">${MODULOS[al.modulo||'1']&&MODULOS[al.modulo||'1'].nome||'Módulo 1'}</span></td>
+      <td><span class="badge ${sitCl}">${al.situacao||'ATIVO'}</span></td>
+      <td><div style="display:flex;gap:6px">
+        ${al.situacao!=='DESISTENTE'?`<button class="btn btn-red btn-xs" title="Marcar como Desistente" onclick="marcarDesistente(${al.id})">🚪</button>`:`<button class="btn btn-green btn-xs" title="Reativar" onclick="reativarAluno(${al.id})">↩️</button>`}
+        <button class="btn btn-ghost btn-xs" onclick="openAlunoModal(${al.id})">✏️</button>
+        <button class="btn btn-red btn-xs" onclick="deletarAluno(${al.id})">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  updateSelUI();
+}
+
+function toggleSelAluno(id, el){
+  if(el.checked) _selectedIds.add(id); else _selectedIds.delete(id);
+  const row=el.closest('tr');
+  if(row) row.className=el.checked?'row-sel':'';
+  updateSelUI();
+}
+
+function updateSelUI(){
+  const n=_selectedIds.size;
+  const btn=document.getElementById('btn-excluir-sel');
+  const cnt=document.getElementById('count-sel');
+  if(btn){ btn.style.display=n>0?'':'none'; if(cnt) cnt.textContent=n; }
+  const chkAll=document.getElementById('chk-all');
+  if(chkAll){
+    const visible=[...document.querySelectorAll('.chk-aluno')].map(c=>parseInt(c.dataset.id));
+    chkAll.checked=visible.length>0&&visible.every(id=>_selectedIds.has(id));
+    chkAll.indeterminate=!chkAll.checked&&visible.some(id=>_selectedIds.has(id));
+  }
+}
+
+function toggleCheckAll(el){
+  const ids=[...document.querySelectorAll('.chk-aluno')].map(c=>parseInt(c.dataset.id));
+  ids.forEach(id=>{ if(el.checked) _selectedIds.add(id); else _selectedIds.delete(id); });
+  renderAlunos();
+}
+
+function toggleSelecionarTodos(){
+  const allIds=DB.alunos.map(a=>a.id);
+  const todosSelected=allIds.every(id=>_selectedIds.has(id));
+  if(todosSelected){ _selectedIds.clear(); }
+  else { allIds.forEach(id=>_selectedIds.add(id)); }
+  renderAlunos();
+}
+
+function excluirSelecionados(){
+  const n=_selectedIds.size;
+  if(!n){ toast('Nenhum aluno selecionado',true); return; }
+  if(!confirm(`Excluir ${n} aluno(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+  _selectedIds.forEach(id=>{
+    DB.alunos=DB.alunos.filter(a=>a.id!==id);
+    Object.keys(DB.presencas).forEach(k=>{ if(k.startsWith(id+'_')) delete DB.presencas[k]; });
+  });
+  _selectedIds.clear();
+  saveDB(); renderAlunos(); renderEquipes();
+  toast(`${n} aluno(s) excluído(s)! ✓`);
+}
+
+// ── IMPORTAR LISTA ──
+function openImportModal(){
+  refreshEquipeSelects();
+  document.getElementById('imp-nomes').value='';
+  document.getElementById('imp-preview').style.display='none';
+  updateImpSemanas();
+  openModal('modal-import');
+}
+
+function updateImpSemanas(){
+  const sel = document.getElementById('imp-semana');
+  if(!sel) return;
+  let opts = '<option value="">Não marcar presença</option>';
+  [1,2,3].forEach(m=>{
+    MODULOS[m].semanas.forEach((s,i)=>{
+      opts += `<option value="${m}_${i}">${MODULOS[m].nome} · ${s.label}</option>`;
+    });
+  });
+  sel.innerHTML = opts;
+}
+
+function parseLinha(linha){
+  const sep = linha.includes(';') ? ';' : linha.includes(',') ? ',' : null;
+  if(sep){
+    const parts = linha.split(sep).map(p=>p.trim());
+    if(parts[0]==='1'||parts[0]==='2'||parts[0]==='3'){
+      return {modulo:parts[0], nome:parts[1]||'', equipeNome:parts[2]||null, inscricao:parts[3]||''};
+    }
+    return {modulo:null, nome:parts[0]||'', equipeNome:parts[1]||null, inscricao:parts[2]||''};
+  }
+  return {modulo:null, nome:linha.trim(), equipeNome:null, inscricao:''};
+}
+
+function garantirEquipe(nomeEquipe, modulo){
+  if(!nomeEquipe) return null;
+  const norm = nomeEquipe.trim();
+  if(!norm) return null;
+  let eq = DB.equipes.find(e => e.nome.toLowerCase() === norm.toLowerCase());
+  if(!eq){ eq = {id:newId(), nome:norm, modulo}; DB.equipes.push(eq); }
+  return eq.id;
+}
+
+function marcarPresencaSemana(alunoId, modulo, semIdx){
+  const sem = MODULOS[modulo].semanas[semIdx];
+  sem.aulas.forEach(a => {
+    DB.presencas[presKey(alunoId, modulo, semIdx, a)] = true;
+  });
+}
+
+function previewImport(){
+  const texto  = document.getElementById('imp-nomes').value.trim();
+  const eqPadId= document.getElementById('imp-equipe').value||null;
+  const semVal2= document.getElementById('imp-semana').value;
+  const semIdx = semVal2;
+  const preview= document.getElementById('imp-preview');
+  if(!texto){ preview.style.display='none'; return; }
+
+  const linhas = texto.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  let novos=0, existentes=0;
+  let html = `<div style="display:flex;justify-content:space-between;margin-bottom:8px">
+    <strong style="color:var(--blue-l)">${linhas.length} linha(s) detectada(s)</strong>
+  </div>`;
+
+  linhas.forEach(l=>{
+    const {nome, equipeNome} = parseLinha(l);
+    if(!nome) return;
+    const _eqEncontrada = eqPadId ? DB.equipes.find(function(e){return e.id==eqPadId;}) : null;
+    const eqNome = equipeNome || (_eqEncontrada ? _eqEncontrada.nome : null);
+    const jaExiste = !!DB.alunos.find(a=>a.nome.toLowerCase()===nome.toLowerCase());
+    const eqNova  = equipeNome && !DB.equipes.find(e=>e.nome.toLowerCase()===equipeNome.toLowerCase());
+    if(jaExiste) existentes++; else novos++;
+
+    html += `<div style="padding:4px 0;border-bottom:1px solid rgba(30,46,74,.35);display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <span>
+        <strong style="color:${jaExiste?'var(--muted)':'var(--text)'}">${nome}</strong>
+        ${eqNome?`<span style="color:var(--muted);font-size:11px"> · ${eqNome}</span>`:''}
+        ${eqNova?`<span style="color:var(--green);font-size:10px"> (equipe nova)</span>`:''}
+      </span>
+      <span style="font-size:10px;flex-shrink:0;font-weight:600;color:${jaExiste?'#E67E22':'var(--green)'}">
+        ${jaExiste?'⚠️ já cadastrado':'✅ novo'}
+      </span>
+    </div>`;
+  });
+
+  const resumo = [];
+  if(novos)      resumo.push(`<span style="color:var(--green)">${novos} novo(s)</span>`);
+  if(existentes) resumo.push(`<span style="color:#E67E22">${existentes} já cadastrado(s)</span>`);
+  html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">${resumo.join(' · ')}</div>`;
+
+  preview.innerHTML = html;
+  preview.style.display = 'block';
+}
+
+function importarAlunos(){
+  const texto  = document.getElementById('imp-nomes').value.trim();
+  const eqPadId= document.getElementById('imp-equipe').value||null;
+  const semVal = document.getElementById('imp-semana').value;
+  const semIdx = semVal !== '' ? parseInt(semVal.split('_')[1]) : null;
+  const semMod = semVal !== '' ? parseInt(semVal.split('_')[0]) : null;
+  if(!texto){ toast('Cole a lista de nomes', true); return; }
+
+  const linhas = texto.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  let countNovos=0, countExistentes=0, countEquipes=0, countPresenca=0;
+  const equipesCriadas = new Set();
+
+  linhas.forEach(linha=>{
+    const {nome, equipeNome, inscricao, modulo: moduloLinha} = parseLinha(linha);
+    if(!nome) return;
+    const moduloAluno = moduloLinha || '1';
+
+    let equipeId = null;
+    if(equipeNome){
+      const antesTam = DB.equipes.length;
+      equipeId = garantirEquipe(equipeNome, moduloAluno);
+      if(DB.equipes.length > antesTam && !equipesCriadas.has(equipeNome.toLowerCase())){
+        equipesCriadas.add(equipeNome.toLowerCase()); countEquipes++;
+      }
+    } else if(eqPadId){
+      equipeId = parseInt(eqPadId);
+    }
+
+    let aluno = DB.alunos.find(a => a.nome.toLowerCase()===nome.toLowerCase());
+
+    if(aluno){
+      countExistentes++;
+    } else {
+      aluno = {id:newId(), nome, inscricao:inscricao||'', modulo:moduloAluno, equipeId, situacao:'ATIVO'};
+      DB.alunos.push(aluno);
+      countNovos++;
+    }
+
+    if(semIdx !== null){
+      if(semMod!==null) marcarPresencaSemana(aluno.id, semMod, semIdx);
+      countPresenca++;
+    }
+  });
+
+  saveDB();
+  refreshEquipeSelects();
+  closeModal('modal-import');
+  renderAlunos();
+  renderEquipes();
+
+  const partes = [];
+  if(countNovos)     partes.push(`${countNovos} aluno(s) cadastrado(s)`);
+  if(countEquipes)   partes.push(`${countEquipes} equipe(s) criada(s)`);
+  if(countPresenca)  partes.push(`${countPresenca} presença(s) marcadas`);
+  toast((partes.join(' · ') || 'Nenhum aluno novo') + ' ✓');
+}
+
+// ══════════════════════════════════════════
+// PRESENÇA
+// ══════════════════════════════════════════
+function presKey(alunoId, modulo, semIdx, aulaNome){
+  return `${alunoId}_${modulo}_${semIdx}_${aulaNome}`;
+}
+
+function initPresenca(){
+  updatePresencaUI();
+  refreshEquipeSelects('pres-equipe-filtro');
+}
+
+function updatePresencaUI(){
+  const modulo=parseInt(document.getElementById('pres-modulo').value);
+  const mod=MODULOS[modulo];
+  const selSem=document.getElementById('pres-semana');
+  selSem.innerHTML=mod.semanas.map((s,i)=>`<option value="${i}">${s.label}</option>`).join('');
+  selSem.value='0';
+  refreshEquipeSelects('pres-equipe-filtro');
+  renderPresencaTabela();
+}
+
+function onSemanaChange(){
+  renderPresencaTabela();
+}
+
+function updateAulasInfo(){
+  const modulo=parseInt(document.getElementById('pres-modulo').value);
+  const semIdx=parseInt(document.getElementById('pres-semana').value);
+  const sem=MODULOS[modulo].semanas[semIdx];
+  const aulas=sem.aulas;
+  let info;
+  if(aulas[0]==='AP') info='Aula: Apresentação';
+  else if(aulas[0]==='INAU') info='Aula: Inaugural';
+  else if(aulas.length===1) info=`Aula: ${aulas[0]}`;
+  else info=`Aulas: ${aulas[0]} e ${aulas[aulas.length-1]}`;
+  document.getElementById('pres-aulas-info').textContent=`📚 ${sem.label} — ${info}`;
+  const thA1=document.getElementById('th-a1');
+  const thA2=document.getElementById('th-a2');
+  if(aulas.length===1){
+    const lbl=aulas[0]==='AP'?'Apresentação':aulas[0]==='INAU'?'Inaugural':'Aula';
+    if(thA1){ thA1.textContent=lbl; thA1.style.display=''; }
+    if(thA2){ thA2.textContent=''; thA2.style.display='none'; }
+  } else {
+    if(thA1){ thA1.textContent=`Aula ${aulas[0]}`; thA1.style.display=''; }
+    if(thA2){ thA2.textContent=`Aula ${aulas[1]}`; thA2.style.display=''; }
+  }
+}
+
+function renderPresencaTabela(){
+  const modulo=parseInt(document.getElementById('pres-modulo').value);
+  const semIdx=parseInt(document.getElementById('pres-semana').value);
+  const _eqf1=document.getElementById('pres-equipe-filtro'); const eqFiltro=_eqf1&&_eqf1.value;
+  const sem=MODULOS[modulo].semanas[semIdx];
+  if(!sem) return;
+  const aulas=sem.aulas;
+
+  updateAulasInfo();
+
+  const _pb=document.getElementById('pres-busca'); const buscaNome=(_pb&&_pb.value||'').toLowerCase().trim();
+  let alunos=DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO');
+  alunos=alunos.filter(a=>(a.modulo||'1')==String(modulo));
+  if(eqFiltro) alunos=alunos.filter(a=>a.equipeId==eqFiltro);
+  if(buscaNome) alunos=alunos.filter(a=>a.nome.toLowerCase().includes(buscaNome)||(a.inscricao||'').toString().toLowerCase().includes(buscaNome));
+
+  const tb=document.getElementById('tb-presenca');
+  if(!alunos.length){
+    tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno ativo neste módulo</td></tr>';
+    return;
+  }
+
+  tb.innerHTML=alunos.map(al=>{
+    const eq=DB.equipes.find(e=>e.id===al.equipeId);
+    let total=0;
+    const aulasCells=aulas.map((a,ai)=>{
+      const key=presKey(al.id,modulo,semIdx,a);
+      const pres=DB.presencas[key]||false;
+      if(pres) total++;
+      return `<td style="text-align:center">
+        <div class="pres-dot ${pres?'sim':'nao'}" onclick="togglePres(${al.id},${modulo},${semIdx},'${a}',this)">
+          ${pres?'✅':'❌'}
+        </div>
+      </td>`;
+    });
+    while(aulasCells.length<2) aulasCells.push('<td></td>');
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px">${al.inscricao||'—'}</td>
+      <td><strong>${al.nome}</strong></td>
+      <td>${eq?`<span class="badge badge-b" style="font-size:10px">${eq.nome}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+      ${aulasCells.join('')}
+      <td style="text-align:center"><strong style="color:${total===aulas.length?'var(--green)':total===0?'var(--muted)':'var(--blue-l)'}">${total}/${aulas.length}</strong></td>
+    </tr>`;
+  }).join('');
+
+  const totalPres=alunos.reduce((acc,al)=>acc+aulas.filter(a=>DB.presencas[presKey(al.id,modulo,semIdx,a)]||false).length,0);
+  const maxPoss=alunos.length*aulas.length;
+  document.getElementById('pres-contador').textContent=`${totalPres} de ${maxPoss} presenças registradas`;
+}
+
+function togglePres(alunoId, modulo, semIdx, aula, el){
+  const key=presKey(alunoId,modulo,semIdx,aula);
+  DB.presencas[key]=!DB.presencas[key];
+  const p=DB.presencas[key];
+  el.className='pres-dot '+(p?'sim':'nao');
+  el.textContent=p?'✅':'❌';
+  saveDB();
+  const modObj=MODULOS[modulo]; const sem=modObj.semanas[semIdx];
+  const row=el.closest('tr');
+  const aulas=sem.aulas;
+  let total=0;
+  aulas.forEach((a,i)=>{ if(DB.presencas[presKey(alunoId,modulo,semIdx,a)]) total++; });
+  const lastTd=row.querySelector('td:last-child');
+  if(lastTd) lastTd.innerHTML=`<strong style="color:${total===aulas.length?'var(--green)':total===0?'var(--muted)':'var(--blue-l)'}">${total}/${aulas.length}</strong>`;
+}
+
+function marcarTodos(pres){
+  const modulo=parseInt(document.getElementById('pres-modulo').value);
+  const semIdx=parseInt(document.getElementById('pres-semana').value);
+  const _eqf2=document.getElementById('pres-equipe-filtro'); const eqFiltro=_eqf2&&_eqf2.value;
+  const sem=MODULOS[modulo].semanas[semIdx];
+  let alunos=DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO');
+  alunos=alunos.filter(a=>(a.modulo||'1')==String(modulo));
+  if(eqFiltro) alunos=alunos.filter(a=>a.equipeId==eqFiltro);
+  alunos.forEach(al=>{
+    sem.aulas.forEach(a=>{ DB.presencas[presKey(al.id,modulo,semIdx,a)]=pres; });
+  });
+  saveDB(); renderPresencaTabela();
+  toast(pres?`${alunos.length} alunos marcados presentes!`:`Presenças removidas.`);
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function semanaIniciada(modulo, si){
+  return Object.keys(DB.presencas).some(k=>{
+    const parts = k.split('_');
+    return parts[1]==String(modulo) && parts[2]==String(si) && DB.presencas[k];
+  });
+}
+
+function calcRetencao(alunos, modulo){
+  const mod = MODULOS[modulo];
+  let feitas=0, possiveis=0;
+  mod.semanas.forEach((sem,si)=>{
+    if(!semanaIniciada(modulo, si)) return;
+    alunos.forEach(al=>{
+      sem.aulas.forEach(a=>{
+        possiveis++;
+        if(DB.presencas[presKey(al.id, modulo, si, a)]) feitas++;
+      });
+    });
+  });
+  return {feitas, possiveis, pct: possiveis ? Math.round(feitas/possiveis*100) : 0};
+}
+
+function retColor(pct){
+  if(pct>=75) return 'var(--green)';
+  if(pct>=40) return '#F39C12';
+  return 'var(--red)';
+}
+
+function renderDashboard(){
+  const todosAlunos = DB.alunos;
+  const ativos = todosAlunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO');
+  const alunoModulo  = (a) => a.modulo || '1';
+  const allModAtivos = (m) => ativos.filter(a=>alunoModulo(a)==String(m));
+  const desistentes = todosAlunos.filter(a=>a.situacao==='DESISTENTE');
+  const allModDesist = (m) => desistentes.filter(a=>alunoModulo(a)==String(m));
+  const allModTodos  = (m) => todosAlunos.filter(a=>alunoModulo(a)==String(m));
+
+  const modCores = {1:'var(--blue-l)', 2:'var(--green)', 3:'#E05555'};
+  const modAfter = {1:'linear-gradient(90deg,var(--blue),var(--blue-l))',
+                    2:'linear-gradient(90deg,var(--green),var(--green-l))',
+                    3:'linear-gradient(90deg,#E05555,#F08080)'};
+  const SEM_PAL = ['#4A90D9','#3EC97A','#E67E22','#9B59B6','#E05555','#1ABC9C','#F39C12','#F1948A'];
+
+  // ── KPIs ──
+  let kpisHtml = `
+    <div class="kpi b"><div class="kpi-num">${ativos.length}</div><div class="kpi-lbl">Alunos Ativos</div></div>
+    <div class="kpi r"><div class="kpi-num">${desistentes.length}</div><div class="kpi-lbl">Desistentes</div></div>
+    <div class="kpi p"><div class="kpi-num">${DB.equipes.length}</div><div class="kpi-lbl">Equipes</div></div>`;
+  [1,2,3].forEach(m=>{
+    const n = allModAtivos(m).length;
+    const d = allModDesist(m).length;
+    const ret = calcRetencao(allModAtivos(m), m);
+    kpisHtml += `<div class="kpi" style="overflow:hidden;position:relative">
+      <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:${modAfter[m]}"></div>
+      <div class="kpi-num" style="color:${modCores[m]}">${n}</div>
+      <div class="kpi-lbl">Módulo ${m} · ${d} desist. · ${ret.pct}%</div>
+    </div>`;
+  });
+  document.getElementById('dash-kpis').innerHTML = kpisHtml;
+
+  // ── ALUNOS ATIVOS POR MÓDULO ──
+  let modAlunosHtml = '';
+  [1,2,3].forEach(m=>{
+    const mod = MODULOS[m];
+    const alunosMod = allModAtivos(m);
+    if(!alunosMod.length){ modAlunosHtml += `<div class="mod-block"><div class="card-title">${mod.nome}</div><span style="color:var(--muted);font-size:12px">Nenhum aluno</span></div>`; return; }
+    const maxEq = Math.max(1, ...DB.equipes.map(eq=>alunosMod.filter(a=>a.equipeId===eq.id).length));
+    const semEquipe = alunosMod.filter(a=>!a.equipeId).length;
+    let rows = DB.equipes.filter(eq=>alunosMod.some(a=>a.equipeId===eq.id)).map(eq=>{
+      const n = alunosMod.filter(a=>a.equipeId===eq.id).length;
+      return `<div style="margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">
+          <span>${eq.nome}</span><span style="font-weight:700;color:${modCores[m]}">${n}</span>
+        </div>
+        <div class="ret-bar-bg"><div class="ret-bar-fill" style="width:${Math.round(n/maxEq*100)}%;background:${mod.cor}"></div></div>
+      </div>`;
+    }).join('');
+    if(semEquipe) rows += `<div style="font-size:11px;color:var(--muted);margin-top:4px">+ ${semEquipe} sem equipe</div>`;
+    modAlunosHtml += `<div class="mod-block"><div class="card-title" style="color:${modCores[m]}">${mod.nome} — ${alunosMod.length} ativos</div>${rows}</div>`;
+  });
+  document.getElementById('dash-mod-alunos').innerHTML = modAlunosHtml || '<div style="color:var(--muted);font-size:13px">Nenhum dado.</div>';
+
+  // ── ATIVOS × DESISTENTES POR MÓDULO ──
+  let adModHtml = '';
+  [1,2,3].forEach(m=>{
+    const mod = MODULOS[m];
+    const total = allModTodos(m).length;
+    if(!total) return;
+    const nAtivos = allModAtivos(m).length;
+    const nDesist = allModDesist(m).length;
+    const nOutros = total - nAtivos - nDesist;
+    const pctA = Math.round(nAtivos/total*100);
+    const pctD = Math.round(nDesist/total*100);
+    adModHtml += `<div class="mod-block">
+      <div class="card-title" style="color:${modCores[m]}">${mod.nome} — ${total} total</div>
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:var(--green)">✅ Ativos</span><span style="font-weight:700;color:var(--green)">${nAtivos} (${pctA}%)</span>
+        </div>
+        <div class="ret-bar-bg"><div class="ret-bar-fill" style="width:${pctA}%;background:var(--green)"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:var(--red)">🚪 Desistentes</span><span style="font-weight:700;color:var(--red)">${nDesist} (${pctD}%)</span>
+        </div>
+        <div class="ret-bar-bg"><div class="ret-bar-fill" style="width:${pctD}%;background:var(--red)"></div></div>
+      </div>
+      ${nOutros?`<div style="font-size:11px;color:var(--muted);margin-top:6px">${nOutros} outros (inativo/trancado)</div>`:''}
+    </div>`;
+  });
+  document.getElementById('dash-ativos-desist').innerHTML = adModHtml || '<div style="color:var(--muted);font-size:13px">Nenhum dado.</div>';
+
+  // ── PRESENÇA POR EQUIPE × SEMANA ──
+  let semEqHtml = '';
+  [1,2,3].forEach(m=>{
+    const mod = MODULOS[m];
+    const alunosMod = allModAtivos(m);
+    if(!alunosMod.length) return;
+    const eqsDoMod = DB.equipes.filter(eq=>alunosMod.some(a=>a.equipeId===eq.id));
+    if(!eqsDoMod.length) return;
+
+    const eqSemData = eqsDoMod.map(eq=>{
+      const alunosEq = alunosMod.filter(a=>a.equipeId===eq.id);
+      const semPcts = mod.semanas.map((sem,si)=>{
+        let f=0,p=0;
+        alunosEq.forEach(al=>sem.aulas.forEach(a=>{p++;if(DB.presencas[presKey(al.id,m,si,a)])f++;}));
+        return p?Math.round(f/p*100):0;
+      });
+      const totalPct = (()=>{let f=0,p=0; mod.semanas.forEach((sem,si)=>{ if(!semanaIniciada(m,si)) return; alunosEq.forEach(al=>sem.aulas.forEach(a=>{p++;if(DB.presencas[presKey(al.id,m,si,a)])f++;})); }); return p?Math.round(f/p*100):0;})();
+      return {nome:eq.nome, semPcts, totalPct};
+    }).sort((a,b)=>b.totalPct-a.totalPct);
+
+    const legenda = mod.semanas.map((s,i)=>
+      `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)">
+        <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${SEM_PAL[i%SEM_PAL.length]}"></span>${s.label}
+      </span>`).join('');
+
+    const rows = eqSemData.map(eq=>{
+      const semBars = eq.semPcts.map((pct,i)=>{
+        if(pct===0) return '';
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;border-radius:3px;width:${pct}%;background:${SEM_PAL[i%SEM_PAL.length]}"></div>
+          </div>
+          <span style="width:30px;text-align:right;font-size:11px;font-weight:700;color:${SEM_PAL[i%SEM_PAL.length]}">${pct}%</span>
+        </div>`;
+      }).join('');
+      if(!semBars) return '';
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(30,46,74,.35)">
+        <div style="width:120px;flex-shrink:0;font-size:12px;font-weight:600;color:var(--text);padding-top:2px">${eq.nome}</div>
+        <div style="flex:1;min-width:0">${semBars}</div>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    semEqHtml += `<div class="mod-block" style="margin-bottom:16px">
+      <div class="card-title" style="color:${modCores[m]}">${mod.nome}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px">${legenda}</div>
+      ${rows||'<div style="color:var(--muted);font-size:12px">Sem dados</div>'}
+    </div>`;
+  });
+  document.getElementById('dash-ret-semana-equipe').innerHTML = semEqHtml || '<div style="color:var(--muted);font-size:13px">Nenhum dado ainda.</div>';
+
+  // ── RETENÇÃO TOTAL POR EQUIPE ──
+  let retTotalEqHtml = '';
+  [1,2,3].forEach(m=>{
+    const mod = MODULOS[m];
+    const alunosMod = allModAtivos(m);
+    if(!alunosMod.length) return;
+    const eqsDoMod = DB.equipes.filter(eq=>alunosMod.some(a=>a.equipeId===eq.id));
+    if(!eqsDoMod.length) return;
+    const eqRet = eqsDoMod.map(eq=>{
+      const alunosEq = alunosMod.filter(a=>a.equipeId===eq.id);
+      let f=0,p=0;
+      mod.semanas.forEach((sem,si)=>{ if(!semanaIniciada(m,si)) return; alunosEq.forEach(al=>sem.aulas.forEach(a=>{p++;if(DB.presencas[presKey(al.id,m,si,a)])f++;})); });
+      return {nome:eq.nome, pct:p?Math.round(f/p*100):0, n:alunosEq.length};
+    }).sort((a,b)=>b.pct-a.pct);
+    retTotalEqHtml += `<div class="mod-block"><div class="card-title" style="color:${modCores[m]}">${mod.nome}</div>`;
+    eqRet.forEach(e=>{
+      const rc=retColor(e.pct);
+      retTotalEqHtml += `<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span>${e.nome} <span style="color:var(--muted);font-size:11px">(${e.n} alunos)</span></span>
+          <span style="font-weight:700;color:${rc}">${e.pct}%</span>
+        </div>
+        <div class="ret-bar-bg"><div class="ret-bar-fill" style="width:${e.pct}%;background:${rc}"></div></div>
+      </div>`;
+    });
+    retTotalEqHtml += '</div>';
+  });
+  document.getElementById('dash-ret-total-eq').innerHTML = retTotalEqHtml || '<div style="color:var(--muted);font-size:13px">Sem dados.</div>';
+
+  // ── ATIVOS × DESISTENTES POR EQUIPE ──
+  let eqSitHtml = '';
+  [1,2,3].forEach(m=>{
+    const mod = MODULOS[m];
+    const eqsDoMod = DB.equipes.filter(eq=>allModTodos(m).some(a=>a.equipeId===eq.id));
+    if(!eqsDoMod.length) return;
+    eqSitHtml += `<div class="mod-block"><div class="card-title" style="color:${modCores[m]}">${mod.nome}</div>`;
+    eqsDoMod.forEach(eq=>{
+      const todos = allModTodos(m).filter(a=>a.equipeId===eq.id);
+      const nA = todos.filter(a=>(a.situacao||'ATIVO')==='ATIVO').length;
+      const nD = todos.filter(a=>a.situacao==='DESISTENTE').length;
+      const total = todos.length;
+      const pctA = Math.round(nA/total*100);
+      const pctD = Math.round(nD/total*100);
+      eqSitHtml += `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <strong>${eq.nome}</strong>
+          <span style="display:flex;gap:8px">
+            <span style="color:var(--green)">✅ ${nA}</span>
+            ${nD?`<span style="color:var(--red)">🚪 ${nD}</span>`:''}
+          </span>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;display:flex">
+          <div style="height:100%;width:${pctA}%;background:var(--green)"></div>
+          <div style="height:100%;width:${pctD}%;background:var(--red)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+          <span>${pctA}% ativos</span>${nD?`<span>${pctD}% desistentes</span>`:''}
+        </div>
+      </div>`;
+    });
+    eqSitHtml += '</div>';
+  });
+  document.getElementById('dash-eq-situacao').innerHTML = eqSitHtml || '<div style="color:var(--muted);font-size:13px">Sem dados.</div>';
+}
+
+// ══════════════════════════════════════════
+// SELECTS HELPERS
+// ══════════════════════════════════════════
+function refreshEquipeSelects(targetId=null){
+  const ids=targetId?[targetId]:['al-equipe','imp-equipe','filtro-equipe','pres-equipe-filtro'];
+  ids.forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel) return;
+    const val=sel.value;
+    const base=id==='filtro-equipe'||id==='pres-equipe-filtro'?'<option value="">Todas as equipes</option>':'<option value="">Sem equipe</option>';
+    sel.innerHTML=base+DB.equipes.map(e=>`<option value="${e.id}">${e.nome}</option>`).join('');
+    sel.value=val;
+  });
+}
+
+// ══════════════════════════════════════════
+// BACKUP
+// ══════════════════════════════════════════
+function exportarDados(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`iv_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+  toast('Backup baixado! ✓');
+}
+
+function importarDados(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      DB=JSON.parse(e.target.result); nextId=DB._nextId||1;
+      saveDB(); renderAlunos(); renderEquipes(); renderDashboard();
+      toast('Backup carregado e salvo na nuvem! ✓');
+    }catch(err){ toast('Erro ao carregar backup.', true); }
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════
+// EXPORTAR RELATÓRIO (geração de HTML)
+// ══════════════════════════════════════════
+let dispositivoMobile = 'android';
+function setDisp(tipo, btn){
+  dispositivoMobile = tipo;
+  document.querySelectorAll('#tab-android,#tab-iphone').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function gerarRelatorio(tipo){
+  const modFiltro=document.getElementById('exp-modulo').value;
+  const titulo=document.getElementById('exp-titulo').value||'Instituto de Vencedores';
+  const modulosParaIncluir=modFiltro==='todos'?[1,2,3]:[parseInt(modFiltro)];
+  const reportData=buildReportData(modulosParaIncluir);
+
+  let html, suffix;
+  if(tipo==='mobile'){
+    html = gerarHTMLMobile(reportData, titulo);
+    suffix = '_mobile';
+  } else {
+    html = gerarHTMLWeb(reportData, titulo);
+    suffix = '_desktop';
+  }
+
+  const nomeArquivo=titulo.trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9 _-]/g,'')
+    .replace(/\s+/g,'_')
+    .toLowerCase()
+    .slice(0,40);
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`${nomeArquivo||'relatorio_iv'}${suffix}_${new Date().toISOString().slice(0,10)}.html`; a.click();
+  toast('Relatório gerado! ✓');
+}
+
+function buildReportData(modulosParaIncluir){
+  const data={modulos:[]};
+  modulosParaIncluir.forEach(m=>{
+    const mod=MODULOS[m];
+    const alunos=DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO');
+    const semanas=mod.semanas.map((sem,si)=>{
+      const presentes=alunos.filter(al=>sem.aulas.some(a=>DB.presencas[presKey(al.id,m,si,a)]));
+      const eqMap={};
+      const eqAlunos={};
+      presentes.forEach(al=>{
+        const eq=DB.equipes.find(e=>e.id===al.equipeId);
+        const eqNome=eq?eq.nome:'SEM EQUIPE';
+        eqMap[eqNome]=(eqMap[eqNome]||0)+1;
+        if(!eqAlunos[eqNome]) eqAlunos[eqNome]=[];
+        eqAlunos[eqNome].push(al.nome||'—');
+      });
+      const equipes=Object.entries(eqMap).sort((a,b)=>b[1]-a[1]).map(([nome,p])=>({nome,p,alunos:(eqAlunos[nome]||[]).sort()}));
+      return {label:sem.label, total:presentes.length, equipes};
+    });
+    data.modulos.push({num:m, nome:mod.nome, cor:mod.cor, totalAlunos:alunos.length, semanas,
+      nDesistentes: DB.alunos.filter(a=>a.situacao==='DESISTENTE').length});
+  });
+  return data;
+}
+
+function gerarHTMLMobile(data, titulo){
+  const dt=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  let modulosHTML='', tabsHTML='';
+  const icons=['📖','📗','📄'];
+  const PAL=['#4A90D9','#3EC97A','#9B59B6','#E67E22','#E05555','#1ABC9C','#F39C12','#85C1E9'];
+
+  data.modulos.forEach(function(mod, mi){
+    tabsHTML += `<button onclick="showMod(${mi},this)" id="tab-${mi}" style="flex:1;padding:10px 4px;font-size:10px;font-weight:600;border:none;background:transparent;color:${mi===0?'#7EC8F0':'#6B8AB0'};text-align:center;line-height:1.3;cursor:pointer;border-bottom:3px solid ${mi===0?'#4A90D9':'transparent'};-webkit-tap-highlight-color:transparent"><span style="display:block;font-size:16px;margin-bottom:2px">${icons[mi]||'📄'}</span>${mod.nome}</button>`;
+    let semanasHTML='';
+    mod.semanas.forEach(function(sem){
+      if(!sem.total) return;
+      let rankHTML='';
+      sem.equipes.forEach(function(eq, i){
+        const uid='u'+Math.random().toString(36).slice(2,8);
+        const maxP=sem.equipes[0]?sem.equipes[0].p:1;
+        const pct=Math.round(eq.p/maxP*100);
+        const alunosHtml=eq.alunos.map(function(n){
+          return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(30,46,74,.3)"><div style="width:5px;height:5px;border-radius:50%;background:${PAL[i%PAL.length]};flex-shrink:0"></div><span style="font-size:11px;color:#E8F0FF">${n}</span></div>`;
+        }).join('')||'<div style="font-size:11px;color:#6B8AB0;padding:4px 0">Nenhum aluno</div>';
+        rankHTML+=`<div onclick="tRA('${uid}')" style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;margin-bottom:7px;overflow:hidden;cursor:pointer"><div style="display:flex;align-items:center;gap:10px;padding:10px 12px"><div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;background:${PAL[i%PAL.length]}">${i+1}</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:#E8F0FF">${eq.nome}</div><div style="height:4px;background:#1E2E4A;border-radius:2px;overflow:hidden;margin-top:5px"><div style="height:100%;border-radius:2px;width:${pct}%;background:${PAL[i%PAL.length]}"></div></div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:20px;font-weight:900;color:${PAL[i%PAL.length]}">${eq.p}</div><div style="font-size:9px;color:#6B8AB0">aluno${eq.p!==1?'s':''}</div></div><div id="arr_${uid}" style="font-size:10px;color:#6B8AB0;margin-left:4px">▼</div></div><div id="${uid}" style="display:none;padding:0 12px 10px;border-top:1px solid rgba(30,46,74,.4)"><div style="font-size:9px;font-weight:700;color:#6B8AB0;text-transform:uppercase;letter-spacing:1px;margin:7px 0 4px">Alunos presentes</div>${alunosHtml}</div></div>`;
+      });
+      semanasHTML+=`<div style="margin-bottom:20px;padding-top:6px;border-top:2px solid ${mod.cor}"><div style="font-size:13px;font-weight:700;color:${mod.cor};margin-bottom:10px;padding:6px 10px;background:rgba(0,0,0,.2);border-radius:8px">${sem.label}</div><div style="font-size:10px;color:#6B8AB0;margin-bottom:6px">${sem.total} aluno(s) presente(s)</div>${rankHTML}</div>`;
+    });
+    modulosHTML+=`<div id="mod-${mi}" style="display:${mi===0?'block':'none'};padding:14px 12px 36px"><div style="font-size:12px;color:#6B8AB0;margin-bottom:16px">Total: ${mod.totalAlunos} ativos · ${mod.nDesistentes} desistentes</div>${semanasHTML||'<div style="color:#6B8AB0;text-align:center;padding:40px 0;font-size:13px">Nenhuma semana com dados</div>'}</div>`;
+  });
+
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><title>${titulo}</title><style>*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{background:#050A14;color:#E8F0FF;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;overflow-x:hidden}.header{background:linear-gradient(160deg,#071020,#0A1A40 60%,#071020);border-bottom:1px solid #1E2E4A;padding:24px 16px 18px;text-align:center}.header h1{font-size:22px;font-weight:900;color:#fff}.header h1 span{color:#7EC8F0}.header p{color:#6B8AB0;font-size:11px;margin-top:4px}.top-nav{display:flex;background:#0D1626;border-bottom:1px solid #1E2E4A;position:sticky;top:0;z-index:100}</style></head><body><div class="header"><h1>Instituto de <span>Vencedores</span></h1><p>Gerado em ${dt}</p></div><nav class="top-nav">${tabsHTML}</nav><div id="modulos">${modulosHTML}</div><script>function showMod(mi,btn){var mods=document.getElementById("modulos").children;for(var i=0;i<mods.length;i++){mods[i].style.display="none";}document.getElementById("mod-"+mi).style.display="block";var tabs=btn.parentNode.children;for(var i=0;i<tabs.length;i++){tabs[i].style.color="#6B8AB0";tabs[i].style.borderBottom="3px solid transparent";}btn.style.color="#7EC8F0";btn.style.borderBottom="3px solid #4A90D9";try{window.scrollTo(0,0);}catch(e){}}function tRA(uid){var el=document.getElementById(uid);var arr=document.getElementById("arr_"+uid);if(!el)return;var open=el.style.display==="block";el.style.display=open?"none":"block";if(arr)arr.textContent=open?"▼":"▲";}<\/script></body></html>`;
+}
+
+function gerarHTMLWeb(data, titulo){
+  const dt=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  let body='';
+  data.modulos.forEach(function(mod){
+    body+=`<h2 style="font-size:20px;font-weight:900;color:${mod.cor};margin:32px 0 16px;padding-bottom:10px;border-bottom:2px solid ${mod.cor}">${mod.nome}</h2>`;
+    body+=`<p style="color:#6B8AB0;font-size:13px;margin-bottom:20px">${mod.totalAlunos} alunos ativos · ${mod.nDesistentes} desistentes</p>`;
+    mod.semanas.forEach(function(sem){
+      if(!sem.total) return;
+      body+=`<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:16px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:${mod.cor};margin-bottom:12px">${sem.label} — ${sem.total} presentes</div>`;
+      sem.equipes.forEach(function(eq,i){
+        const PAL=['#4A90D9','#3EC97A','#9B59B6','#E67E22','#E05555','#1ABC9C'];
+        const cor=PAL[i%PAL.length];
+        body+=`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><strong style="color:#E8F0FF">${eq.nome}</strong><span style="font-weight:700;color:${cor}">${eq.p} aluno${eq.p!==1?'s':''}</span></div><div style="height:6px;background:#1E2E4A;border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(eq.p/sem.total*100)}%;background:${cor}"></div></div><div style="font-size:11px;color:#6B8AB0;margin-top:4px">${eq.alunos.join(', ')}</div></div>`;
+      });
+      body+='</div>';
+    });
+  });
+
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${titulo}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050A14;color:#E8F0FF;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:32px 24px;max-width:900px;margin:0 auto}</style></head><body><h1 style="font-size:32px;font-weight:900;color:#fff;margin-bottom:4px">Instituto de <span style="color:#7EC8F0">Vencedores</span></h1><p style="color:#6B8AB0;font-size:13px;margin-bottom:32px">Gerado em ${dt}</p>${body}</body></html>`;
+}
+
+// ══ INIT ══
+loadDB();
+document.getElementById('pres-modulo').addEventListener('change',()=>{
+  refreshEquipeSelects('pres-equipe-filtro');
+});
+</script>
+</body>
+</html>
