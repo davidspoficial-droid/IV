@@ -628,27 +628,25 @@ const MODULOS = {
   2: {
     nome:"2º Módulo", cor:"#3EC97A",
     semanas:[
-      {label:"Semana 01 — Aula Inaugural",   aulas:["INAU"]},
-      {label:"Semana 02 — Aulas 01 e 02",    aulas:[1,2]},
-      {label:"Semana 03 — Aulas 03 e 04",    aulas:[3,4]},
-      {label:"Semana 04 — Aulas 05 e 06",    aulas:[5,6]},
-      {label:"Semana 05 — Aulas 07 e 08",    aulas:[7,8]},
-      {label:"Semana 06 — Aulas 09 e 10",    aulas:[9,10]},
-      {label:"Semana 07 — Aulas 11 e 12",    aulas:[11,12]},
-      {label:"Semana 08 — Apresentação",      aulas:["AP"]},
+      {label:"Semana 01 — Aulas 01 e 02",    aulas:[1,2]},
+      {label:"Semana 02 — Aulas 03 e 04",    aulas:[3,4]},
+      {label:"Semana 03 — Aulas 05 e 06",    aulas:[5,6]},
+      {label:"Semana 04 — Aulas 07 e 08",    aulas:[7,8]},
+      {label:"Semana 05 — Aulas 09 e 10",    aulas:[9,10]},
+      {label:"Semana 06 — Aulas 11 e 12",    aulas:[11,12]},
+      {label:"Semana 07 — Apresentação",      aulas:["AP"]},
     ]
   },
   3: {
     nome:"3º Módulo", cor:"#E05555",
     semanas:[
-      {label:"Semana 01 — Aula Inaugural",   aulas:["INAU"]},
-      {label:"Semana 02 — Aulas 01 e 02",    aulas:[1,2]},
-      {label:"Semana 03 — Aulas 03 e 04",    aulas:[3,4]},
-      {label:"Semana 04 — Aulas 05 e 06",    aulas:[5,6]},
-      {label:"Semana 05 — Aulas 07 e 08",    aulas:[7,8]},
-      {label:"Semana 06 — Aulas 09 e 10",    aulas:[9,10]},
-      {label:"Semana 07 — Aulas 11 e 12",    aulas:[11,12]},
-      {label:"Semana 08 — Apresentação",      aulas:["AP"]},
+      {label:"Semana 01 — Aulas 01 e 02",    aulas:[1,2]},
+      {label:"Semana 02 — Aulas 03 e 04",    aulas:[3,4]},
+      {label:"Semana 03 — Aulas 05 e 06",    aulas:[5,6]},
+      {label:"Semana 04 — Aulas 07 e 08",    aulas:[7,8]},
+      {label:"Semana 05 — Aulas 09 e 10",    aulas:[9,10]},
+      {label:"Semana 06 — Aulas 11 e 12",    aulas:[11,12]},
+      {label:"Semana 07 — Apresentação",      aulas:["AP"]},
     ]
   }
 };
@@ -1644,8 +1642,8 @@ async function gerarRelatorioLink(){
 }
 
 function semLabelCurto(item){
-  if(item.label.includes('Inaugural'))    return '🎓 Aula Inaugural';
-  if(item.label.includes('Apresent'))     return '🏆 Semana de Apresentação';
+  if(item.label.includes('Inaugural') && item.modulo === 1) return '🎓 Aula Inaugural';
+  if(item.label.includes('Apresent'))                       return '🏆 Semana de Apresentação';
   return '📅 ' + numParaOrdinal(item.num) + ' Semana';
 }
 
