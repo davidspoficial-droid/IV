@@ -929,7 +929,7 @@ let _selectedIds = new Set();
 function renderAlunos(){
   const _ba=document.getElementById('busca-aluno'); const busca=(_ba&&_ba.value||'').toLowerCase();
   const _fe=document.getElementById('filtro-equipe'); const fEq=_fe&&_fe.value;
-  let lista=DB.alunos;
+  let lista=DB.alunos.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   if(busca) lista=lista.filter(a=>a.nome.toLowerCase().includes(busca));
   if(fEq)   lista=lista.filter(a=>a.equipeId==fEq);
 
@@ -1221,6 +1221,7 @@ function renderPresencaTabela(){
   alunos=alunos.filter(a=>(a.modulo||'1')==String(modulo));
   if(eqFiltro) alunos=alunos.filter(a=>a.equipeId==eqFiltro);
   if(buscaNome) alunos=alunos.filter(a=>a.nome.toLowerCase().includes(buscaNome)||(a.inscricao||'').toString().toLowerCase().includes(buscaNome));
+  alunos=alunos.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
 
   const tb=document.getElementById('tb-presenca');
   if(!alunos.length){
