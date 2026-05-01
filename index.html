@@ -1922,7 +1922,7 @@ function gerarHTMLMobile(data, titulo){
     +'function tRA(uid){'
     +'var el=document.getElementById(uid);var arr=document.getElementById("arr_"+uid);'
     +'if(!el)return;var open=el.style.display==="block";'
-    +'el.style.display=open?"none":"block";if(arr)arr.textContent=open?"&#9660;":"&#9650;";}';
+    +'el.style.display=open?"none":"block";if(arr)arr.innerHTML=open?"&#9660;":"&#9650;";}';
 
   return '<!DOCTYPE html><html lang="pt-BR"><head>'
     +'<meta charset="UTF-8">'
