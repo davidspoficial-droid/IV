@@ -1569,18 +1569,18 @@ function setDisp(tipo, btn){
 // ══════════════════════════════════════════
 // GERAR LINK DO RELATÓRIO MOBILE
 // ══════════════════════════════════════════
-// detecta a última semana com presença marcada
+// detecta a última semana com presença marcada, por módulo
 function detectarUltimaSemana(modulosParaIncluir){
-  let ultimaLabel = '';
-  let ultimaNum   = 0;
+  const porModulo = [];
 
   modulosParaIncluir.forEach(function(m){
     const mod = MODULOS[m];
-    const alunos = DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO' && (a.modulo||'1')==String(m));
+    const alunos = DB.alunos.filter(a=>(a.situacao||'ATIVO')=='ATIVO' && (a.modulo||'1')==String(m));
+    let ultimaNum = 0;
+    let ultimaLabel = '';
     mod.semanas.forEach(function(sem, si){
       const temPresenca = alunos.some(al => sem.aulas.some(a => DB.presencas[presKey(al.id, m, si, a)]));
       if(temPresenca){
-        // número ordinal da semana (1-based)
         const num = si + 1;
         if(num > ultimaNum){
           ultimaNum   = num;
@@ -1588,9 +1588,12 @@ function detectarUltimaSemana(modulosParaIncluir){
         }
       }
     });
+    if(ultimaNum > 0){
+      porModulo.push({ modulo: m, nomeModulo: mod.nome, num: ultimaNum, label: ultimaLabel });
+    }
   });
 
-  return { num: ultimaNum, label: ultimaLabel };
+  return porModulo;
 }
 
 function numParaOrdinal(n){
@@ -1640,21 +1643,27 @@ async function gerarRelatorioLink(){
   }
 }
 
-function montarMensagemWhats(link, ultima){
-  let semTxt = '';
-  if(ultima && ultima.num > 0){
-    if(ultima.label.includes('Inaugural'))    semTxt = '🎓 Aula Inaugural';
-    else if(ultima.label.includes('Apresent')) semTxt = '🏆 Semana de Apresentação';
-    else semTxt = numParaOrdinal(ultima.num) + ' Semana';
+function semLabelCurto(item){
+  if(item.label.includes('Inaugural'))    return '🎓 Aula Inaugural';
+  if(item.label.includes('Apresent'))     return '🏆 Semana de Apresentação';
+  return '📅 ' + numParaOrdinal(item.num) + ' Semana';
+}
+
+function montarMensagemWhats(link, porModulo){
+  let linhasModulos = '';
+  if(Array.isArray(porModulo) && porModulo.length > 0){
+    linhasModulos = porModulo.map(function(item){
+      return semLabelCurto(item) + ' - ' + item.nomeModulo;
+    }).join('\n');
   } else {
-    semTxt = 'Relatório Semanal';
+    linhasModulos = '📅 Relatório Semanal';
   }
-  return `📊 *Relatório Semanal – Instituto de Vencedores*\n📅 *${semTxt}*\n\n🔗 Acesse pelo link (abre no navegador):\n${link}`;
+  return `📊 *Relatório Semanal – Instituto de Vencedores*\n\n${linhasModulos}\n\n🔗 Acesse pelo link (abre no navegador):\n${link}`;
 }
 
 function copiarLink(){
   const link  = document.getElementById('link-gerado').value;
-  const ultima = window._ultimaSemana || {num:0, label:''};
+  const ultima = window._ultimaSemana || [];
   const msg   = montarMensagemWhats(link, ultima);
   navigator.clipboard.writeText(msg).then(()=>toast('Mensagem copiada! ✓')).catch(()=>{
     const ta = document.createElement('textarea');
@@ -1666,7 +1675,7 @@ function copiarLink(){
 
 function abrirWhatsApp(){
   const link   = document.getElementById('link-gerado').value;
-  const ultima = window._ultimaSemana || {num:0, label:''};
+  const ultima = window._ultimaSemana || [];
   const msg    = montarMensagemWhats(link, ultima);
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }
