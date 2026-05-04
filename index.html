@@ -332,13 +332,18 @@ tbody td{padding:9px 14px;vertical-align:middle;}
       <select id="filtro-equipe" style="width:180px" onchange="renderAlunos()">
         <option value="">Todas as equipes</option>
       </select>
+      <select id="filtro-turma" style="width:160px" onchange="renderAlunos()">
+        <option value="">📅 Todas as turmas</option>
+        <option value="quinta">📅 Quinta-feira</option>
+        <option value="sabado">📅 Sábado</option>
+      </select>
     </div>
   </div>
   <div class="tbl-wrap">
     <table>
       <thead><tr>
         <th style="width:36px"><input type="checkbox" id="chk-all" onchange="toggleCheckAll(this)" style="cursor:pointer;accent-color:var(--blue)"></th>
-        <th>#</th><th>Nº Insc.</th><th>Nome</th><th>Equipe</th><th>Módulo</th><th>Situação</th><th>Ações</th>
+        <th>#</th><th>Nº Insc.</th><th>Nome</th><th>Equipe</th><th>Módulo</th><th>📅 Turma</th><th>Situação</th><th>Ações</th>
       </tr></thead>
       <tbody id="tb-alunos"></tbody>
     </table>
@@ -535,6 +540,16 @@ tbody td{padding:9px 14px;vertical-align:middle;}
         </select>
       </div>
     </div>
+    <div class="form-row">
+      <div>
+        <label>📅 Turma</label>
+        <select id="al-turma">
+          <option value="">Sem turma definida</option>
+          <option value="quinta">📅 Quinta-feira</option>
+          <option value="sabado">📅 Sábado</option>
+        </select>
+      </div>
+    </div>
     <input type="hidden" id="al-id">
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
       <button class="btn btn-ghost" onclick="closeModal('modal-aluno')">Cancelar</button>
@@ -577,6 +592,7 @@ tbody td{padding:9px 14px;vertical-align:middle;}
       <code style="color:var(--text)">Breno;Ousados</code> — nome e equipe<br>
       <code style="color:var(--text)">Breno;Ousados;123456</code> — nome, equipe e nº inscrição<br>
       <code style="color:var(--text);background:rgba(74,144,217,.1);padding:1px 5px;border-radius:4px">2;Breno;Ousados;123456</code> — <strong style="color:var(--blue-l)">módulo</strong> · nome · equipe · inscrição<br>
+      <code style="color:var(--text);background:rgba(62,201,122,.1);padding:1px 5px;border-radius:4px">2;Breno;Ousados;123456;quinta</code> — com <strong style="color:var(--green-l)">turma</strong> (quinta ou sabado)<br>
       <span style="color:var(--green);font-size:11px">✅ Colocar 1, 2 ou 3 no início define o módulo. Sem informar → Módulo 1.</span>
     </div>
     <div class="form-row">
@@ -587,6 +603,16 @@ tbody td{padding:9px 14px;vertical-align:middle;}
       <div>
         <label>Equipe padrão (sem ";" na linha)</label>
         <select id="imp-equipe"><option value="">Sem equipe</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>📅 Turma padrão</label>
+        <select id="imp-turma">
+          <option value="">Sem turma definida</option>
+          <option value="quinta">📅 Quinta-feira</option>
+          <option value="sabado">📅 Sábado</option>
+        </select>
       </div>
     </div>
     <div class="form-row solo">
@@ -837,6 +863,7 @@ function openAlunoModal(id=null){
     document.getElementById('al-equipe').value=al.equipeId||'';
     document.getElementById('al-modulo').value=al.modulo||'1';
     document.getElementById('al-situacao').value=al.situacao||'ATIVO';
+    document.getElementById('al-turma').value=al.turma||'';
   } else {
     document.getElementById('modal-aluno-title').textContent='Novo Aluno';
     document.getElementById('al-nome').value='';
@@ -844,6 +871,7 @@ function openAlunoModal(id=null){
     document.getElementById('al-equipe').value='';
     document.getElementById('al-modulo').value='1';
     document.getElementById('al-situacao').value='ATIVO';
+    document.getElementById('al-turma').value='';
   }
   openModal('modal-aluno');
 }
@@ -855,13 +883,14 @@ function salvarAluno(){
   const equipeId  = document.getElementById('al-equipe').value||null;
   const modulo    = document.getElementById('al-modulo').value||'1';
   const situacao  = document.getElementById('al-situacao').value;
+  const turma     = document.getElementById('al-turma').value||'';
   const id        = document.getElementById('al-id').value;
   if(id){
     const al=DB.alunos.find(a=>a.id==id);
     al.nome=nome; al.inscricao=inscricao; al.modulo=modulo;
-    al.equipeId=equipeId?parseInt(equipeId):null; al.situacao=situacao;
+    al.equipeId=equipeId?parseInt(equipeId):null; al.situacao=situacao; al.turma=turma;
   } else {
-    DB.alunos.push({id:newId(), nome, inscricao, modulo, equipeId:equipeId?parseInt(equipeId):null, situacao:'ATIVO'});
+    DB.alunos.push({id:newId(), nome, inscricao, modulo, equipeId:equipeId?parseInt(equipeId):null, situacao:'ATIVO', turma});
   }
   saveDB(); closeModal('modal-aluno'); renderAlunos(); renderDashboard(); toast('Aluno salvo! ✓');
 }
@@ -927,18 +956,21 @@ let _selectedIds = new Set();
 function renderAlunos(){
   const _ba=document.getElementById('busca-aluno'); const busca=(_ba&&_ba.value||'').toLowerCase();
   const _fe=document.getElementById('filtro-equipe'); const fEq=_fe&&_fe.value;
+  const _ft=document.getElementById('filtro-turma'); const fTurma=_ft&&_ft.value;
   let lista=DB.alunos.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   if(busca) lista=lista.filter(a=>a.nome.toLowerCase().includes(busca));
   if(fEq)   lista=lista.filter(a=>a.equipeId==fEq);
+  if(fTurma) lista=lista.filter(a=>(a.turma||'')==fTurma);
 
   const tb=document.getElementById('tb-alunos');
   if(!lista.length){
-    tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno encontrado</td></tr>'; return;
+    tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno encontrado</td></tr>'; return;
   }
   tb.innerHTML=lista.map((al,i)=>{
     const eq=DB.equipes.find(e=>e.id===al.equipeId);
     const sitCl=al.situacao==='ATIVO'?'badge-g':al.situacao==='DESISTENTE'?'badge-r':al.situacao==='INATIVO'?'badge-r':'badge-p';
     const checked=_selectedIds.has(al.id)?'checked':'';
+    const turmaLabel=al.turma==='quinta'?'<span class="badge" style="background:rgba(74,144,217,.15);color:#7EC8F0;font-size:10px">📅 Quinta</span>':al.turma==='sabado'?'<span class="badge" style="background:rgba(155,89,182,.15);color:#C39BD3;font-size:10px">📅 Sábado</span>':'<span style="color:var(--muted);font-size:11px">—</span>';
     return `<tr class="${_selectedIds.has(al.id)?'row-sel':''}">
       <td style="text-align:center"><input type="checkbox" ${checked} class="chk-aluno" data-id="${al.id}"
         onchange="toggleSelAluno(${al.id},this)" style="cursor:pointer;accent-color:var(--blue)"></td>
@@ -947,6 +979,7 @@ function renderAlunos(){
       <td><strong>${al.nome}</strong></td>
       <td>${eq?`<span class="badge badge-b">${eq.nome}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
       <td><span class="badge badge-p" style="font-size:10px">${MODULOS[al.modulo||'1']&&MODULOS[al.modulo||'1'].nome||'Módulo 1'}</span></td>
+      <td>${turmaLabel}</td>
       <td><span class="badge ${sitCl}">${al.situacao||'ATIVO'}</span></td>
       <td><div style="display:flex;gap:6px">
         ${al.situacao!=='DESISTENTE'?`<button class="btn btn-red btn-xs" title="Marcar como Desistente" onclick="marcarDesistente(${al.id})">🚪</button>`:`<button class="btn btn-green btn-xs" title="Reativar" onclick="reativarAluno(${al.id})">↩️</button>`}
@@ -1030,12 +1063,13 @@ function parseLinha(linha){
   const sep = linha.includes(';') ? ';' : linha.includes(',') ? ',' : null;
   if(sep){
     const parts = linha.split(sep).map(p=>p.trim());
+    const turmaRaw = (v) => { const n=v&&v.toLowerCase(); return (n==='quinta'||n==='5')?'quinta':(n==='sabado'||n==='sábado'||n==='6')?'sabado':''; };
     if(parts[0]==='1'||parts[0]==='2'||parts[0]==='3'){
-      return {modulo:parts[0], nome:parts[1]||'', equipeNome:parts[2]||null, inscricao:parts[3]||''};
+      return {modulo:parts[0], nome:parts[1]||'', equipeNome:parts[2]||null, inscricao:parts[3]||'', turma:turmaRaw(parts[4])};
     }
-    return {modulo:null, nome:parts[0]||'', equipeNome:parts[1]||null, inscricao:parts[2]||''};
+    return {modulo:null, nome:parts[0]||'', equipeNome:parts[1]||null, inscricao:parts[2]||'', turma:turmaRaw(parts[3])};
   }
-  return {modulo:null, nome:linha.trim(), equipeNome:null, inscricao:''};
+  return {modulo:null, nome:linha.trim(), equipeNome:null, inscricao:'', turma:''};
 }
 
 function garantirEquipe(nomeEquipe, modulo){
@@ -1101,6 +1135,7 @@ function previewImport(){
 function importarAlunos(){
   const texto  = document.getElementById('imp-nomes').value.trim();
   const eqPadId= document.getElementById('imp-equipe').value||null;
+  const turmaPad = document.getElementById('imp-turma').value||'';
   const semVal = document.getElementById('imp-semana').value;
   const semIdx = semVal !== '' ? parseInt(semVal.split('_')[1]) : null;
   const semMod = semVal !== '' ? parseInt(semVal.split('_')[0]) : null;
@@ -1111,9 +1146,10 @@ function importarAlunos(){
   const equipesCriadas = new Set();
 
   linhas.forEach(linha=>{
-    const {nome, equipeNome, inscricao, modulo: moduloLinha} = parseLinha(linha);
+    const {nome, equipeNome, inscricao, modulo: moduloLinha, turma: turmaLinha} = parseLinha(linha);
     if(!nome) return;
     const moduloAluno = moduloLinha || '1';
+    const turmaAluno = turmaLinha || turmaPad;
 
     let equipeId = null;
     if(equipeNome){
@@ -1129,9 +1165,11 @@ function importarAlunos(){
     let aluno = DB.alunos.find(a => a.nome.toLowerCase()===nome.toLowerCase());
 
     if(aluno){
+      // atualiza turma se não tinha e agora tem
+      if(!aluno.turma && turmaAluno) aluno.turma = turmaAluno;
       countExistentes++;
     } else {
-      aluno = {id:newId(), nome, inscricao:inscricao||'', modulo:moduloAluno, equipeId, situacao:'ATIVO'};
+      aluno = {id:newId(), nome, inscricao:inscricao||'', modulo:moduloAluno, equipeId, situacao:'ATIVO', turma:turmaAluno};
       DB.alunos.push(aluno);
       countNovos++;
     }
@@ -1722,9 +1760,9 @@ function buildReportData(modulosParaIncluir){
         const eqNome=eq?eq.nome:'SEM EQUIPE';
         eqMap[eqNome]=(eqMap[eqNome]||0)+1;
         if(!eqAlunos[eqNome]) eqAlunos[eqNome]=[];
-        eqAlunos[eqNome].push(al.nome||'—');
+        eqAlunos[eqNome].push({nome:al.nome||'—', turma:al.turma||''});
       });
-      const equipes=Object.entries(eqMap).sort((a,b)=>b[1]-a[1]).map(([nome,p])=>({nome,p,alunos:(eqAlunos[nome]||[]).sort()}));
+      const equipes=Object.entries(eqMap).sort((a,b)=>b[1]-a[1]).map(([nome,p])=>({nome,p,alunos:(eqAlunos[nome]||[]).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))}));
       const pct=totalTodos>0?Math.round(presentes.length/totalTodos*100):0;
       return {label:sem.label, total:presentes.length, equipes, pct};
     });
@@ -1866,9 +1904,37 @@ function gerarHTMLMobile(data, titulo){
       sem.equipes.forEach(function(eq,i){
         var uid='u'+Math.random().toString(36).slice(2,8);
         var pct=Math.round(eq.p/maxP*100);
-        var alunosHtml=eq.alunos.map(function(n){
-          return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(30,46,74,.3)"><div style="width:5px;height:5px;border-radius:50%;background:'+PAL[i%PAL.length]+';flex-shrink:0"></div><span style="font-size:12px;color:#E8F0FF">'+n+'</span></div>';
-        }).join('')||'<div style="font-size:11px;color:#6B8AB0;padding:4px 0">Nenhum aluno</div>';
+
+        // verifica se há alunos com turma
+        var temQuinta = eq.alunos.some(function(a){ return a.turma==='quinta'; });
+        var temSabado = eq.alunos.some(function(a){ return a.turma==='sabado'; });
+        var temTurma  = temQuinta || temSabado;
+
+        var alunosHtmlPorTurma = function(filtro){
+          return eq.alunos.filter(function(a){ return !filtro || a.turma===filtro; }).map(function(a){
+            var tBadge = a.turma==='quinta'
+              ? '<span style="font-size:9px;background:rgba(74,144,217,.2);color:#7EC8F0;padding:1px 6px;border-radius:10px;margin-left:4px">Qui</span>'
+              : a.turma==='sabado'
+              ? '<span style="font-size:9px;background:rgba(155,89,182,.2);color:#C39BD3;padding:1px 6px;border-radius:10px;margin-left:4px">Sáb</span>'
+              : '';
+            return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(30,46,74,.3)"><div style="width:5px;height:5px;border-radius:50%;background:'+PAL[i%PAL.length]+';flex-shrink:0"></div><span style="font-size:12px;color:#E8F0FF">'+a.nome+'</span>'+tBadge+'</div>';
+          }).join('') || '<div style="font-size:11px;color:#6B8AB0;padding:4px 0">Nenhum aluno nesta turma</div>';
+        };
+
+        var filtroToggle = '';
+        if(temTurma){
+          filtroToggle = '<div id="ft_'+uid+'" style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">'
+            +'<button onclick="filtTurma(\''+uid+'\',\'\')" id="ft_'+uid+'_t" style="padding:3px 10px;font-size:10px;font-weight:700;border:none;border-radius:20px;cursor:pointer;background:#4A90D9;color:#fff">Todos</button>'
+            +(temQuinta?'<button onclick="filtTurma(\''+uid+'\',\'quinta\')" id="ft_'+uid+'_q" style="padding:3px 10px;font-size:10px;font-weight:700;border:none;border-radius:20px;cursor:pointer;background:rgba(74,144,217,.15);color:#7EC8F0">📅 Quinta</button>':'')
+            +(temSabado?'<button onclick="filtTurma(\''+uid+'\',\'sabado\')" id="ft_'+uid+'_s" style="padding:3px 10px;font-size:10px;font-weight:700;border:none;border-radius:20px;cursor:pointer;background:rgba(155,89,182,.15);color:#C39BD3">📅 Sábado</button>':'')
+            +'</div>';
+        }
+
+        var alunosDefault = alunosHtmlPorTurma('');
+        // embed all filtered lists for JS toggle
+        var alunosQuinta = temQuinta ? alunosHtmlPorTurma('quinta') : '';
+        var alunosSabado = temSabado ? alunosHtmlPorTurma('sabado') : '';
+
         rankHTML+='<div onclick="tRA(\''+uid+'\')" style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;margin-bottom:8px;overflow:hidden;cursor:pointer">'
           +'<div style="display:flex;align-items:center;gap:10px;padding:11px 13px">'
           +'<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;background:'+PAL[i%PAL.length]+'">'+(i+1)+'</div>'
@@ -1876,7 +1942,12 @@ function gerarHTMLMobile(data, titulo){
           +'<div style="height:4px;background:#1E2E4A;border-radius:2px;overflow:hidden;margin-top:6px"><div style="height:100%;border-radius:2px;width:'+pct+'%;background:'+PAL[i%PAL.length]+'"></div></div></div>'
           +'<div style="text-align:right;flex-shrink:0;margin:0 6px"><div style="font-size:22px;font-weight:900;color:'+PAL[i%PAL.length]+'">'+eq.p+'</div><div style="font-size:9px;color:#6B8AB0">aluno'+(eq.p!==1?'s':'')+'</div></div>'
           +'<div id="arr_'+uid+'" style="font-size:11px;color:#6B8AB0">&#9660;</div></div>'
-          +'<div id="'+uid+'" style="display:none;padding:0 13px 12px;border-top:1px solid rgba(30,46,74,.4)"><div style="font-size:9px;font-weight:700;color:#6B8AB0;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px">Alunos presentes</div>'+alunosHtml+'</div></div>';
+          +'<div id="'+uid+'" style="display:none;padding:0 13px 12px;border-top:1px solid rgba(30,46,74,.4)" onclick="event.stopPropagation()">'
+          +'<div style="font-size:9px;font-weight:700;color:#6B8AB0;text-transform:uppercase;letter-spacing:1px;margin:8px 0 5px">Alunos presentes</div>'
+          +filtroToggle
+          +'<div id="al_'+uid+'">'+alunosDefault+'</div>'
+          +(temTurma?'<script>window._alData=window._alData||{};window._alData["'+uid+'"]={"":"'+btoa(unescape(encodeURIComponent(alunosDefault)))+'","quinta":"'+btoa(unescape(encodeURIComponent(alunosQuinta)))+'","sabado":"'+btoa(unescape(encodeURIComponent(alunosSabado)))+'"}<\/script>':'')
+          +'</div></div>';
       });
       semanasConteudo+='<div id="sem-'+mi+'-'+si+'" style="display:'+(si===0?'block':'none')+';padding-bottom:16px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
@@ -1929,8 +2000,17 @@ function gerarHTMLMobile(data, titulo){
     +'function tRA(uid){'
     +'var el=document.getElementById(uid);var arr=document.getElementById("arr_"+uid);'
     +'if(!el)return;var open=el.style.display==="block";'
-    +'el.style.display=open?"none":"block";if(arr)arr.innerHTML=open?"&#9660;":"&#9650;";}';
-
+    +'el.style.display=open?"none":"block";if(arr)arr.innerHTML=open?"&#9660;":"&#9650;";}'
+    +'function filtTurma(uid,filtro){'
+    +'var d=window._alData&&window._alData[uid];if(!d)return;'
+    +'var raw=d[filtro]||d[""];var html=decodeURIComponent(escape(atob(raw)));'
+    +'var el=document.getElementById("al_"+uid);if(el)el.innerHTML=html;'
+    +'var btns=["ft_"+uid+"_t","ft_"+uid+"_q","ft_"+uid+"_s"];'
+    +'var map={"":"ft_"+uid+"_t","quinta":"ft_"+uid+"_q","sabado":"ft_"+uid+"_s"};'
+    +'btns.forEach(function(bid){var b=document.getElementById(bid);if(b){b.style.background="rgba(255,255,255,0.06)";b.style.color="#6B8AB0";}});'
+    +'var act=document.getElementById(map[filtro]);'
+    +'if(act){act.style.background=filtro==="quinta"?"rgba(74,144,217,.5)":filtro==="sabado"?"rgba(155,89,182,.5)":"#4A90D9";act.style.color="#fff";}'
+    +'}';
   return '<!DOCTYPE html><html lang="pt-BR"><head>'
     +'<meta charset="UTF-8">'
     +'<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">'
@@ -1971,7 +2051,7 @@ function gerarHTMLWeb(data, titulo){
       sem.equipes.forEach(function(eq,i){
         const PAL=['#4A90D9','#3EC97A','#9B59B6','#E67E22','#E05555','#1ABC9C'];
         const cor=PAL[i%PAL.length];
-        body+=`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><strong style="color:#E8F0FF">${eq.nome}</strong><span style="font-weight:700;color:${cor}">${eq.p} aluno${eq.p!==1?'s':''}</span></div><div style="height:6px;background:#1E2E4A;border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(eq.p/sem.total*100)}%;background:${cor}"></div></div><div style="font-size:11px;color:#6B8AB0;margin-top:4px">${eq.alunos.join(', ')}</div></div>`;
+        body+=`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><strong style="color:#E8F0FF">${eq.nome}</strong><span style="font-weight:700;color:${cor}">${eq.p} aluno${eq.p!==1?'s':''}</span></div><div style="height:6px;background:#1E2E4A;border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(eq.p/sem.total*100)}%;background:${cor}"></div></div><div style="font-size:11px;color:#6B8AB0;margin-top:4px">${eq.alunos.map(a=>{const tb=a.turma==='quinta'?'<span style="font-size:9px;background:rgba(74,144,217,.2);color:#7EC8F0;padding:1px 5px;border-radius:10px;margin-left:3px">Qui</span>':a.turma==='sabado'?'<span style="font-size:9px;background:rgba(155,89,182,.2);color:#C39BD3;padding:1px 5px;border-radius:10px;margin-left:3px">Sáb</span>':''; return a.nome+tb;}).join(', ')}</div></div>`;
       });
       body+='</div>';
     });
