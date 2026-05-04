@@ -595,11 +595,7 @@ tbody td{padding:9px 14px;vertical-align:middle;}
       <code style="color:var(--text);background:rgba(62,201,122,.1);padding:1px 5px;border-radius:4px">2;Breno;Ousados;123456;quinta</code> — com <strong style="color:var(--green-l)">turma</strong> (quinta ou sabado)<br>
       <span style="color:var(--green);font-size:11px">✅ Colocar 1, 2 ou 3 no início define o módulo. Sem informar → Módulo 1.</span>
     </div>
-    <div class="form-row">
-      <div>
-        <label>Marcar presença na semana (opcional)</label>
-        <select id="imp-semana"><option value="">Não marcar presença</option></select>
-      </div>
+    <div class="form-row solo">
       <div>
         <label>Equipe padrão (sem ";" na linha)</label>
         <select id="imp-equipe"><option value="">Sem equipe</option></select>
@@ -1043,20 +1039,7 @@ function openImportModal(){
   refreshEquipeSelects();
   document.getElementById('imp-nomes').value='';
   document.getElementById('imp-preview').style.display='none';
-  updateImpSemanas();
   openModal('modal-import');
-}
-
-function updateImpSemanas(){
-  const sel = document.getElementById('imp-semana');
-  if(!sel) return;
-  let opts = '<option value="">Não marcar presença</option>';
-  [1,2,3].forEach(m=>{
-    MODULOS[m].semanas.forEach((s,i)=>{
-      opts += `<option value="${m}_${i}">${MODULOS[m].nome} · ${s.label}</option>`;
-    });
-  });
-  sel.innerHTML = opts;
 }
 
 function parseLinha(linha){
@@ -1136,13 +1119,10 @@ function importarAlunos(){
   const texto  = document.getElementById('imp-nomes').value.trim();
   const eqPadId= document.getElementById('imp-equipe').value||null;
   const turmaPad = document.getElementById('imp-turma').value||'';
-  const semVal = document.getElementById('imp-semana').value;
-  const semIdx = semVal !== '' ? parseInt(semVal.split('_')[1]) : null;
-  const semMod = semVal !== '' ? parseInt(semVal.split('_')[0]) : null;
   if(!texto){ toast('Cole a lista de nomes', true); return; }
 
   const linhas = texto.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
-  let countNovos=0, countExistentes=0, countEquipes=0, countPresenca=0;
+  let countNovos=0, countExistentes=0, countEquipes=0;
   const equipesCriadas = new Set();
 
   linhas.forEach(linha=>{
@@ -1165,18 +1145,12 @@ function importarAlunos(){
     let aluno = DB.alunos.find(a => a.nome.toLowerCase()===nome.toLowerCase());
 
     if(aluno){
-      // atualiza turma se não tinha e agora tem
       if(!aluno.turma && turmaAluno) aluno.turma = turmaAluno;
       countExistentes++;
     } else {
       aluno = {id:newId(), nome, inscricao:inscricao||'', modulo:moduloAluno, equipeId, situacao:'ATIVO', turma:turmaAluno};
       DB.alunos.push(aluno);
       countNovos++;
-    }
-
-    if(semIdx !== null){
-      if(semMod!==null) marcarPresencaSemana(aluno.id, semMod, semIdx);
-      countPresenca++;
     }
   });
 
@@ -1189,7 +1163,6 @@ function importarAlunos(){
   const partes = [];
   if(countNovos)     partes.push(`${countNovos} aluno(s) cadastrado(s)`);
   if(countEquipes)   partes.push(`${countEquipes} equipe(s) criada(s)`);
-  if(countPresenca)  partes.push(`${countPresenca} presença(s) marcadas`);
   toast((partes.join(' · ') || 'Nenhum aluno novo') + ' ✓');
 }
 
@@ -1559,12 +1532,13 @@ function renderDashboard(){
 // ══════════════════════════════════════════
 function refreshEquipeSelects(targetId=null){
   const ids=targetId?[targetId]:['al-equipe','imp-equipe','filtro-equipe','pres-equipe-filtro'];
+  const equipesSorted = DB.equipes.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   ids.forEach(id=>{
     const sel=document.getElementById(id);
     if(!sel) return;
     const val=sel.value;
     const base=id==='filtro-equipe'||id==='pres-equipe-filtro'?'<option value="">Todas as equipes</option>':'<option value="">Sem equipe</option>';
-    sel.innerHTML=base+DB.equipes.map(e=>`<option value="${e.id}">${e.nome}</option>`).join('');
+    sel.innerHTML=base+equipesSorted.map(e=>`<option value="${e.id}">${e.nome}</option>`).join('');
     sel.value=val;
   });
 }
