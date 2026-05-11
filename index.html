@@ -1723,17 +1723,17 @@ function buildReportData(modulosParaIncluir){
     const mod=MODULOS[m];
     const alunosModAtivos=DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO'&&(a.modulo||'1')==String(m));
     const alunosModDesist=DB.alunos.filter(a=>a.situacao==='DESISTENTE'&&(a.modulo||'1')==String(m));
-
-    const alunosDesistentes = alunosModDesist.map(a=>{
-      const eq = DB.equipes.find(e=>e.id===a.equipeId);
+    const alunosDesistentes=alunosModDesist.map(a=>{
+      const eq=DB.equipes.find(e=>e.id===a.equipeId);
       return {
-        nome: a.nome || '—',
-        inscricao: a.inscricao || '',
-        equipe: eq ? eq.nome : 'Sem equipe',
-        turma: a.turma || ''
+        id:a.id,
+        nome:a.nome||'—',
+        inscricao:a.inscricao||'',
+        equipe:eq?eq.nome:'Sem equipe',
+        equipeId:a.equipeId||null,
+        turma:a.turma||''
       };
     }).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-
     const nDesistentes=alunosModDesist.length;
     const totalTodos=alunosModAtivos.length+nDesistentes;
 
@@ -1779,12 +1779,28 @@ function buildReportData(modulosParaIncluir){
     // ativos x desistentes por equipe
     const desistentesPorEq=DB.equipes.filter(e=>e.modulo==String(m)||e.modulo==='todos').map(eqObj=>{
       const ativos=alunosModAtivos.filter(a=>a.equipeId===eqObj.id).length;
-      const desist=alunosModDesist.filter(a=>a.equipeId===eqObj.id).length;
+      const alunosDesistEq=alunosDesistentes.filter(a=>a.equipeId===eqObj.id);
+      const desist=alunosDesistEq.length;
       const total=ativos+desist;
       if(!total) return null;
-      return {nome:eqObj.nome,ativos,desistentes:desist,total,
+      return {nome:eqObj.nome,ativos,desistentes:desist,total,alunosDesistentes:alunosDesistEq,
         pctAtivos:Math.round(ativos/total*100),pctDesist:Math.round(desist/total*100)};
     }).filter(Boolean).sort((a,b)=>b.ativos-a.ativos);
+
+    const desistentesSemEquipe=alunosDesistentes.filter(a=>!a.equipeId);
+    if(desistentesSemEquipe.length){
+      const ativosSemEquipe=alunosModAtivos.filter(a=>!a.equipeId).length;
+      const totalSemEquipe=ativosSemEquipe+desistentesSemEquipe.length;
+      desistentesPorEq.push({
+        nome:'Sem equipe',
+        ativos:ativosSemEquipe,
+        desistentes:desistentesSemEquipe.length,
+        total:totalSemEquipe,
+        alunosDesistentes:desistentesSemEquipe,
+        pctAtivos:Math.round(ativosSemEquipe/totalSemEquipe*100),
+        pctDesist:Math.round(desistentesSemEquipe.length/totalSemEquipe*100)
+      });
+    }
 
     data.modulos.push({
       num:m, nome:mod.nome, cor:mod.cor,
@@ -1814,9 +1830,9 @@ function gerarHTMLMobile(data, titulo){
     // KPI
     var retCor = mod.retencaoGeral>=75?'#3EC97A':mod.retencaoGeral>=40?'#F39C12':'#E05555';
     var kpiHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px">'
-      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+cor+'"></div><div style="font-size:28px;font-weight:900;color:'+cor+';line-height:1">'+mod.totalAlunos+'</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Total Ativos</div></div>'
-      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:#E05555"></div><div style="font-size:28px;font-weight:900;color:#F08080;line-height:1">'+(mod.nDesistentes||0)+'</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Desistentes</div></div>'
-      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden;grid-column:1/-1"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+retCor+'"></div><div style="font-size:28px;font-weight:900;color:'+retCor+';line-height:1">'+(mod.retencaoGeral||0)+'%</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Retencao Geral</div></div>'
+      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+cor+'"></div><div style="font-size:18px;margin-bottom:4px">&#x2705;</div><div style="font-size:28px;font-weight:900;color:'+cor+';line-height:1">'+mod.totalAlunos+'</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Total Ativos</div></div>'
+      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:#E05555"></div><div style="font-size:18px;margin-bottom:4px">&#x1F4C9;</div><div style="font-size:28px;font-weight:900;color:#F08080;line-height:1">'+(mod.nDesistentes||0)+'</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Desistentes</div></div>'
+      +'<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:14px 10px;text-align:center;position:relative;overflow:hidden;grid-column:1/-1"><div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+retCor+'"></div><div style="font-size:20px;margin-bottom:4px">&#x1F3AF;</div><div style="font-size:28px;font-weight:900;color:'+retCor+';line-height:1">'+(mod.retencaoGeral||0)+'%</div><div style="font-size:9px;color:#6B8AB0;margin-top:4px;text-transform:uppercase;letter-spacing:1px">Retencao Total</div></div>'
       +'</div>';
 
     // Comparativo por semana
@@ -1850,14 +1866,26 @@ function gerarHTMLMobile(data, titulo){
         +'<div style="height:100%;border-radius:3px;width:'+e.retencao+'%;background:'+e.cor+'"></div></div></div>';
     }).join('') || '<div style="text-align:center;padding:20px;color:#6B8AB0;font-size:12px">Sem dados</div>';
 
-    // Ativos x desistentes
-    var ativosDesistHTML = (mod.desistentesPorEq||[]).map(function(e){
+    // Ativos x desistentes, com lista dos nomes dos desistentes
+    var ativosDesistHTML = (mod.desistentesPorEq||[]).map(function(e, idx){
+      var uid='des_'+mi+'_'+idx;
+      var nomesDesistentes = (e.alunosDesistentes||[]).map(function(a){
+        var turma = a.turma==='quinta'
+          ? '<span style="font-size:9px;background:rgba(74,144,217,.2);color:#7EC8F0;padding:1px 6px;border-radius:10px;margin-left:4px">Qui</span>'
+          : a.turma==='sabado'
+            ? '<span style="font-size:9px;background:rgba(155,89,182,.2);color:#C39BD3;padding:1px 6px;border-radius:10px;margin-left:4px">Sáb</span>'
+            : '';
+        return '<div style="padding:6px 0;border-bottom:1px solid rgba(30,46,74,.35)">'
+          +'<div style="font-size:11px;font-weight:700;color:#F08080">&#x1F4C9; '+a.nome+turma+'</div>'
+          +'<div style="font-size:10px;color:#6B8AB0;margin-top:1px">'+(a.inscricao?'Inscrição: '+a.inscricao:'Sem nº de inscrição')+'</div>'
+          +'</div>';
+      }).join('');
       return '<div style="margin-bottom:11px">'
         +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">'
         +'<strong style="color:#E8F0FF">'+e.nome+'</strong>'
         +'<span style="display:flex;gap:8px">'
         +'<span style="color:#3EC97A">&#x2705; '+e.ativos+'</span>'
-        +(e.desistentes?'<span style="color:#E05555">&#x1F6AA; '+e.desistentes+'</span>':'')
+        +(e.desistentes?'<span style="color:#E05555">&#x1F4C9; '+e.desistentes+'</span>':'')
         +'</span></div>'
         +'<div style="height:7px;background:#1E2E4A;border-radius:4px;overflow:hidden;display:flex">'
         +'<div style="height:100%;width:'+e.pctAtivos+'%;background:#3EC97A"></div>'
@@ -1866,8 +1894,24 @@ function gerarHTMLMobile(data, titulo){
         +'<div style="display:flex;justify-content:space-between;font-size:10px;color:#6B8AB0;margin-top:2px">'
         +'<span>'+e.pctAtivos+'% ativos</span>'
         +(e.desistentes?'<span>'+e.pctDesist+'% desist.</span>':'')
-        +'</div></div>';
+        +'</div>'
+        +(e.desistentes?'<button onclick="tRA(''+uid+'')" style="margin-top:7px;width:100%;padding:7px 10px;border-radius:9px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.10);color:#F08080;font-size:11px;font-weight:700;cursor:pointer">Ver nomes dos desistentes <span id="arr_'+uid+'">&#9660;</span></button><div id="'+uid+'" style="display:none;margin-top:8px;background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.20);border-radius:9px;padding:8px 10px">'+nomesDesistentes+'</div>':'')
+        +'</div>';
     }).join('') || '<div style="text-align:center;padding:20px;color:#6B8AB0;font-size:12px">Sem dados</div>';
+
+    var desistentesGeralHTML = (mod.alunosDesistentes||[]).length
+      ? mod.alunosDesistentes.map(function(a){
+          var turma = a.turma==='quinta'
+            ? '<span style="font-size:9px;background:rgba(74,144,217,.2);color:#7EC8F0;padding:1px 6px;border-radius:10px;margin-left:4px">Qui</span>'
+            : a.turma==='sabado'
+              ? '<span style="font-size:9px;background:rgba(155,89,182,.2);color:#C39BD3;padding:1px 6px;border-radius:10px;margin-left:4px">Sáb</span>'
+              : '';
+          return '<div style="padding:7px 0;border-bottom:1px solid rgba(30,46,74,.35)">'
+            +'<div style="font-size:12px;font-weight:700;color:#F08080">&#x1F4C9; '+a.nome+turma+'</div>'
+            +'<div style="font-size:10px;color:#6B8AB0;margin-top:2px">'+(a.inscricao?'Inscrição: '+a.inscricao+' · ':'')+'Equipe: '+a.equipe+'</div>'
+            +'</div>';
+        }).join('')
+      : '<div style="text-align:center;padding:20px;color:#6B8AB0;font-size:12px">Nenhum aluno desistente neste módulo.</div>';
 
     // Botoes de semana (SEM contagem)
     var semBtnsHTML = '';
@@ -1960,30 +2004,12 @@ function gerarHTMLMobile(data, titulo){
       +cbox('<div style="font-size:10px;font-weight:700;color:#6B8AB0;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Cada cor = uma semana</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+legendHTML+'</div>'
         +comparativoHTML)
-      +st('&#127885; Retencao Total por Equipe')
+      +st('&#127919; Retencao Total por Equipe')
       +cbox(retEquipeHTML)
       +st('&#128101; Ativos x Desistentes por Equipe')
       +cbox(ativosDesistHTML)
-      +st('&#128201; Alunos Desistentes')
-      +cbox(
-        (mod.alunosDesistentes && mod.alunosDesistentes.length)
-        ? mod.alunosDesistentes.map(function(a){
-            var turma = a.turma==='quinta'
-              ? '<span style="font-size:9px;background:rgba(74,144,217,.2);color:#7EC8F0;padding:1px 5px;border-radius:10px;margin-left:4px">Qui</span>'
-              : a.turma==='sabado'
-                ? '<span style="font-size:9px;background:rgba(155,89,182,.2);color:#C39BD3;padding:1px 5px;border-radius:10px;margin-left:4px">Sáb</span>'
-                : '';
-
-            return '<div style="padding:8px 0;border-bottom:1px solid rgba(30,46,74,.35)">'
-              + '<div style="font-size:12px;font-weight:700;color:#F08080">&#128201; '+a.nome+turma+'</div>'
-              + '<div style="font-size:10px;color:#6B8AB0;margin-top:2px">'
-              + (a.inscricao ? 'Inscrição: '+a.inscricao+' · ' : '')
-              + 'Equipe: '+a.equipe
-              + '</div>'
-              + '</div>';
-          }).join('')
-        : '<div style="text-align:center;padding:18px;color:#6B8AB0;font-size:12px">Nenhum aluno desistente neste módulo.</div>'
-      )
+      +st('&#x1F4C9; Lista Geral de Desistentes')
+      +cbox(desistentesGeralHTML)
       +'</div></div>';
   });
 
@@ -2051,33 +2077,27 @@ function gerarHTMLWeb(data, titulo){
   data.modulos.forEach(function(mod){
     body+=`<h2 style="font-size:20px;font-weight:900;color:${mod.cor};margin:32px 0 16px;padding-bottom:10px;border-bottom:2px solid ${mod.cor}">${mod.nome}</h2>`;
     body+=`<p style="color:#6B8AB0;font-size:13px;margin-bottom:20px">${mod.totalAlunos} alunos ativos · ${mod.nDesistentes} desistentes</p>`;
-
     if(mod.alunosDesistentes && mod.alunosDesistentes.length){
       body+=`<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:16px;margin-bottom:20px">
         <div style="font-size:15px;font-weight:800;color:#F08080;margin-bottom:12px">📉 Alunos Desistentes</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead>
-            <tr>
-              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Nome</th>
-              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Inscrição</th>
-              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Equipe</th>
-              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Turma</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Nome</th>
+            <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Inscrição</th>
+            <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Equipe</th>
+            <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Turma</th>
+          </tr></thead>
           <tbody>
-            ${mod.alunosDesistentes.map(a=>`
-              <tr>
-                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#E8F0FF;font-weight:700">${a.nome}</td>
-                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.inscricao||'—'}</td>
-                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.equipe||'Sem equipe'}</td>
-                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.turma==='quinta'?'Quinta-feira':a.turma==='sabado'?'Sábado':'—'}</td>
-              </tr>
-            `).join('')}
+            ${mod.alunosDesistentes.map(a=>`<tr>
+              <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#E8F0FF;font-weight:700">${a.nome}</td>
+              <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.inscricao||'—'}</td>
+              <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.equipe||'Sem equipe'}</td>
+              <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.turma==='quinta'?'Quinta-feira':a.turma==='sabado'?'Sábado':'—'}</td>
+            </tr>`).join('')}
           </tbody>
         </table>
       </div>`;
     }
-
     mod.semanas.forEach(function(sem){
       if(!sem.total) return;
       body+=`<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:16px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:${mod.cor};margin-bottom:12px">${sem.label} — ${sem.total} presentes</div>`;
