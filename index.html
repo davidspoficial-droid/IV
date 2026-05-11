@@ -978,7 +978,7 @@ function renderAlunos(){
       <td>${turmaLabel}</td>
       <td><span class="badge ${sitCl}">${al.situacao||'ATIVO'}</span></td>
       <td><div style="display:flex;gap:6px">
-        ${al.situacao!=='DESISTENTE'?`<button class="btn btn-red btn-xs" title="Marcar como Desistente" onclick="marcarDesistente(${al.id})">🚪</button>`:`<button class="btn btn-green btn-xs" title="Reativar" onclick="reativarAluno(${al.id})">↩️</button>`}
+        ${al.situacao!=='DESISTENTE'?`<button class="btn btn-red btn-xs" title="Marcar como Desistente" onclick="marcarDesistente(${al.id})">📉</button>`:`<button class="btn btn-green btn-xs" title="Reativar" onclick="reativarAluno(${al.id})">↩️</button>`}
         <button class="btn btn-ghost btn-xs" onclick="openAlunoModal(${al.id})">✏️</button>
         <button class="btn btn-red btn-xs" onclick="deletarAluno(${al.id})">🗑️</button>
       </div></td>
@@ -1403,7 +1403,7 @@ function renderDashboard(){
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span style="color:var(--red)">🚪 Desistentes</span><span style="font-weight:700;color:var(--red)">${nDesist} (${pctD}%)</span>
+          <span style="color:var(--red)">📉 Desistentes</span><span style="font-weight:700;color:var(--red)">${nDesist} (${pctD}%)</span>
         </div>
         <div class="ret-bar-bg"><div class="ret-bar-fill" style="width:${pctD}%;background:var(--red)"></div></div>
       </div>
@@ -1510,7 +1510,7 @@ function renderDashboard(){
           <strong>${eq.nome}</strong>
           <span style="display:flex;gap:8px">
             <span style="color:var(--green)">✅ ${nA}</span>
-            ${nD?`<span style="color:var(--red)">🚪 ${nD}</span>`:''}
+            ${nD?`<span style="color:var(--red)">📉 ${nD}</span>`:''}
           </span>
         </div>
         <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;display:flex">
@@ -1723,6 +1723,17 @@ function buildReportData(modulosParaIncluir){
     const mod=MODULOS[m];
     const alunosModAtivos=DB.alunos.filter(a=>(a.situacao||'ATIVO')==='ATIVO'&&(a.modulo||'1')==String(m));
     const alunosModDesist=DB.alunos.filter(a=>a.situacao==='DESISTENTE'&&(a.modulo||'1')==String(m));
+
+    const alunosDesistentes = alunosModDesist.map(a=>{
+      const eq = DB.equipes.find(e=>e.id===a.equipeId);
+      return {
+        nome: a.nome || '—',
+        inscricao: a.inscricao || '',
+        equipe: eq ? eq.nome : 'Sem equipe',
+        turma: a.turma || ''
+      };
+    }).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+
     const nDesistentes=alunosModDesist.length;
     const totalTodos=alunosModAtivos.length+nDesistentes;
 
@@ -1779,6 +1790,7 @@ function buildReportData(modulosParaIncluir){
       num:m, nome:mod.nome, cor:mod.cor,
       totalAlunos:alunosModAtivos.length,
       nDesistentes, totalTodos, retencaoGeral,
+      alunosDesistentes,
       semanas, equipesSemanas, eqStats, desistentesPorEq
     });
   });
@@ -1952,6 +1964,26 @@ function gerarHTMLMobile(data, titulo){
       +cbox(retEquipeHTML)
       +st('&#128101; Ativos x Desistentes por Equipe')
       +cbox(ativosDesistHTML)
+      +st('&#128201; Alunos Desistentes')
+      +cbox(
+        (mod.alunosDesistentes && mod.alunosDesistentes.length)
+        ? mod.alunosDesistentes.map(function(a){
+            var turma = a.turma==='quinta'
+              ? '<span style="font-size:9px;background:rgba(74,144,217,.2);color:#7EC8F0;padding:1px 5px;border-radius:10px;margin-left:4px">Qui</span>'
+              : a.turma==='sabado'
+                ? '<span style="font-size:9px;background:rgba(155,89,182,.2);color:#C39BD3;padding:1px 5px;border-radius:10px;margin-left:4px">Sáb</span>'
+                : '';
+
+            return '<div style="padding:8px 0;border-bottom:1px solid rgba(30,46,74,.35)">'
+              + '<div style="font-size:12px;font-weight:700;color:#F08080">&#128201; '+a.nome+turma+'</div>'
+              + '<div style="font-size:10px;color:#6B8AB0;margin-top:2px">'
+              + (a.inscricao ? 'Inscrição: '+a.inscricao+' · ' : '')
+              + 'Equipe: '+a.equipe
+              + '</div>'
+              + '</div>';
+          }).join('')
+        : '<div style="text-align:center;padding:18px;color:#6B8AB0;font-size:12px">Nenhum aluno desistente neste módulo.</div>'
+      )
       +'</div></div>';
   });
 
@@ -2019,6 +2051,33 @@ function gerarHTMLWeb(data, titulo){
   data.modulos.forEach(function(mod){
     body+=`<h2 style="font-size:20px;font-weight:900;color:${mod.cor};margin:32px 0 16px;padding-bottom:10px;border-bottom:2px solid ${mod.cor}">${mod.nome}</h2>`;
     body+=`<p style="color:#6B8AB0;font-size:13px;margin-bottom:20px">${mod.totalAlunos} alunos ativos · ${mod.nDesistentes} desistentes</p>`;
+
+    if(mod.alunosDesistentes && mod.alunosDesistentes.length){
+      body+=`<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:16px;margin-bottom:20px">
+        <div style="font-size:15px;font-weight:800;color:#F08080;margin-bottom:12px">📉 Alunos Desistentes</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr>
+              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Nome</th>
+              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Inscrição</th>
+              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Equipe</th>
+              <th style="text-align:left;color:#7EC8F0;border-bottom:1px solid #1E2E4A;padding:8px">Turma</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${mod.alunosDesistentes.map(a=>`
+              <tr>
+                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#E8F0FF;font-weight:700">${a.nome}</td>
+                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.inscricao||'—'}</td>
+                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.equipe||'Sem equipe'}</td>
+                <td style="padding:8px;border-bottom:1px solid rgba(30,46,74,.45);color:#6B8AB0">${a.turma==='quinta'?'Quinta-feira':a.turma==='sabado'?'Sábado':'—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    }
+
     mod.semanas.forEach(function(sem){
       if(!sem.total) return;
       body+=`<div style="background:#0D1626;border:1px solid #1E2E4A;border-radius:12px;padding:16px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;color:${mod.cor};margin-bottom:12px">${sem.label} — ${sem.total} presentes</div>`;
