@@ -1895,7 +1895,7 @@ function gerarHTMLMobile(data, titulo){
         +'<span>'+e.pctAtivos+'% ativos</span>'
         +(e.desistentes?'<span>'+e.pctDesist+'% desist.</span>':'')
         +'</div>'
-        +(e.desistentes?'<button onclick="tRA(''+uid+'')" style="margin-top:7px;width:100%;padding:7px 10px;border-radius:9px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.10);color:#F08080;font-size:11px;font-weight:700;cursor:pointer">Ver nomes dos desistentes <span id="arr_'+uid+'">&#9660;</span></button><div id="'+uid+'" style="display:none;margin-top:8px;background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.20);border-radius:9px;padding:8px 10px">'+nomesDesistentes+'</div>':'')
+        +(e.desistentes?'<button onclick="tRA(\''+uid+'\')" style="margin-top:7px;width:100%;padding:7px 10px;border-radius:9px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.10);color:#F08080;font-size:11px;font-weight:700;cursor:pointer">Ver nomes dos desistentes <span id="arr_'+uid+'">&#9660;</span></button><div id="'+uid+'" style="display:none;margin-top:8px;background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.20);border-radius:9px;padding:8px 10px">'+nomesDesistentes+'</div>':'')
         +'</div>';
     }).join('') || '<div style="text-align:center;padding:20px;color:#6B8AB0;font-size:12px">Sem dados</div>';
 
