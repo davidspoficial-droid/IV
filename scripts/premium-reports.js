@@ -1,3 +1,4 @@
+// Trigger premium reports workflow
 const fs = require('fs');
 const path = require('path');
 
