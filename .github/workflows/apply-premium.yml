@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - "scripts/apply-premium.js"
+      - "scripts/fix-logo-premium.js"
       - ".github/workflows/apply-premium.yml"
 
 permissions:
@@ -20,8 +21,11 @@ jobs:
       - name: Apply premium visual update
         run: node scripts/apply-premium.js
 
+      - name: Apply premium logo fix
+        run: node scripts/fix-logo-premium.js
+
       - name: Commit premium update
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Aplica layout premium no sistema IV"
+          commit_message: "Aplica layout premium e melhora logo IV"
           file_pattern: index.html
