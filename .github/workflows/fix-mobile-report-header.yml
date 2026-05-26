@@ -1,0 +1,27 @@
+name: Fix Mobile Report Header
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/fix-mobile-report-header.js"
+      - ".github/workflows/fix-mobile-report-header.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix-mobile-report-header:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fix mobile report header
+        run: node scripts/fix-mobile-report-header.js
+
+      - name: Commit mobile report header fix
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Alinha topo do relatório mobile"
+          file_pattern: index.html
