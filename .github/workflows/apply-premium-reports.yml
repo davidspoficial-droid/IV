@@ -1,0 +1,27 @@
+name: Apply Premium Reports
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/premium-reports.js"
+      - ".github/workflows/apply-premium-reports.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-premium-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Apply premium report design
+        run: node scripts/premium-reports.js
+
+      - name: Commit premium reports update
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Aplica relatórios premium IV"
+          file_pattern: index.html
