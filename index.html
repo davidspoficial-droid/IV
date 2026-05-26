@@ -99,7 +99,7 @@ body{background:var(--navy);color:var(--text);font-family:'DM Sans',sans-serif;m
 .header-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;}
 .header-logo span{color:var(--blue-l);}
 .header-badge{background:rgba(74,144,217,.15);border:1px solid rgba(74,144,217,.3);
-  color:var(--blue-l);font-size:10px;font-weight:700;letter-spacing:2px;
+  color:var(--blue-l);font-size:9px;font-weight:700;letter-spacing:1.4px;
   padding:3px 10px;border-radius:20px;text-transform:uppercase;}
 .header-right{margin-left:auto;display:flex;gap:8px;}
 
@@ -2272,21 +2272,23 @@ function gerarHTMLMobile(data, titulo){
     +'*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}'
     +'body{background:radial-gradient(circle at 15% 0%,rgba(47,128,237,.26),transparent 32%),radial-gradient(circle at 90% 8%,rgba(34,211,238,.16),transparent 28%),linear-gradient(145deg,#020611 0%,#07111F 48%,#030712 100%);color:#EAF4FF;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;overflow-x:hidden;-webkit-text-size-adjust:100%}'
     +'body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:38px 38px;opacity:.65}'
-    +'.header{background:linear-gradient(135deg,rgba(7,17,31,.96),rgba(16,40,70,.84)),radial-gradient(circle at 50% 0%,rgba(126,200,240,.20),transparent 48%);border-bottom:1px solid rgba(126,200,240,.18);padding:26px 16px 18px;text-align:center;position:relative;overflow:hidden;box-shadow:0 18px 45px rgba(0,0,0,.35)}'
-    +'.header::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(126,200,240,.16) 0%,transparent 70%)}'
-    +'.report-logo{width:56px;max-width:22vw;height:auto;object-fit:contain;position:relative;z-index:2;margin-bottom:8px;filter:brightness(1.34) contrast(1.16) saturate(1.18) drop-shadow(0 0 7px rgba(126,200,240,.20)) drop-shadow(0 8px 16px rgba(0,0,0,.40)) drop-shadow(0 0 18px rgba(47,128,237,.16))}'
-    +'.hbadge{display:inline-block;margin-bottom:8px;padding:5px 13px;border-radius:20px;border:1px solid rgba(126,200,240,.36);background:rgba(126,200,240,.09);font-size:10px;font-weight:700;letter-spacing:2px;color:#BFEAFF;text-transform:uppercase;position:relative;z-index:2;box-shadow:0 10px 25px rgba(0,0,0,.22)}'
-    +'.header h1{font-size:24px;font-weight:900;margin-bottom:5px;position:relative;z-index:2;background:linear-gradient(90deg,#fff,#DDF4FF 55%,#7EC8F0);-webkit-background-clip:text;background-clip:text;color:transparent}'
+    +'.header{background:linear-gradient(135deg,rgba(7,17,31,.96),rgba(16,40,70,.84)),radial-gradient(circle at 18% 0%,rgba(126,200,240,.18),transparent 42%);border-bottom:1px solid rgba(126,200,240,.18);padding:18px 16px 16px;position:relative;overflow:hidden;box-shadow:0 18px 45px rgba(0,0,0,.35)}'
+    +'.header::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 18% 0%,rgba(126,200,240,.14) 0%,transparent 70%)}'
+    +'.header-top{display:flex;align-items:center;gap:14px;position:relative;z-index:2;max-width:100%}'
+    +'.header-info{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left}'
+    +'.report-logo{width:48px;min-width:48px;max-width:48px;height:auto;object-fit:contain;position:relative;z-index:2;margin:0;display:block;filter:brightness(1.34) contrast(1.16) saturate(1.18) drop-shadow(0 0 7px rgba(126,200,240,.20)) drop-shadow(0 8px 16px rgba(0,0,0,.40)) drop-shadow(0 0 18px rgba(47,128,237,.16))}'
+    +'.hbadge{display:inline-flex;align-items:center;margin:0 0 6px 0;padding:5px 11px;border-radius:20px;border:1px solid rgba(126,200,240,.36);background:rgba(126,200,240,.09);font-size:9px;font-weight:700;letter-spacing:1.4px;color:#BFEAFF;text-transform:uppercase;box-shadow:0 10px 25px rgba(0,0,0,.22);white-space:nowrap}'
+    +'.header h1{font-size:19px;font-weight:900;line-height:1.08;margin:0 0 4px 0;background:linear-gradient(90deg,#fff,#DDF4FF 55%,#7EC8F0);-webkit-background-clip:text;background-clip:text;color:transparent}'
     +'.header h1 span{color:inherit}'
-    +'.hsub{color:#9CB8D6;font-size:11px;position:relative;z-index:2;letter-spacing:.06em}'
+    +'.hsub{color:#9CB8D6;font-size:11px;letter-spacing:.03em;margin:0}'
     +'.top-nav{display:flex;background:rgba(7,17,31,.86);border-bottom:1px solid rgba(126,200,240,.16);position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);box-shadow:0 12px 30px rgba(0,0,0,.22)}'
     +'#modulos{position:relative;z-index:2}'
     +'::-webkit-scrollbar{display:none}'
     +'</style>'
     +'</head><body>'
-    +'<div class="header"><img class="report-logo" src="'+logoSrc+'" alt="Logo Instituto de Vencedores"><div class="hbadge">&#128203; Relatorio Mobile</div>'
+    +'<div class="header"><div class="header-top"><img class="report-logo" src="'+logoSrc+'" alt="Logo Instituto de Vencedores"><div class="header-info"><div class="hbadge">&#128203; Relatorio Mobile</div>'
     +'<h1>Instituto de <span>Vencedores</span></h1>'
-    +'<p class="hsub">Gerado em '+dt+'</p></div>'
+    +'<p class="hsub">Gerado em '+dt+'</p></div></div></div>'
     +'<nav class="top-nav">'+tabsHTML+'</nav>'
     +'<div id="modulos">'+modulosHTML+'</div>'
     +'<script>'+JS+'<\/script>'
