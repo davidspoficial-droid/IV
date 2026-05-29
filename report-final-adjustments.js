@@ -1,3 +1,4 @@
+// FINAL_REPORT_ADJUSTMENTS_V2
 // Ajustes finais dos relatórios: modal premium, WhatsApp limpo, filtros e módulo inativo
 (function(){
 let versaoFinal='mobile';
