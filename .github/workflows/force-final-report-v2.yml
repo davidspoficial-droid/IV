@@ -1,0 +1,42 @@
+name: Force final report v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/force-final-report-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Force v2 and clean message weeks
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          idx=Path('index.html')
+          h=idx.read_text(encoding='utf-8')
+          h=h.replace('./report-final-adjustments.js?v=1','./report-final-adjustments.js?v=2')
+          idx.write_text(h,encoding='utf-8')
+          f=Path('report-final-adjustments.js')
+          s=f.read_text(encoding='utf-8')
+          # marcador para forçar cache novo
+          if 'FINAL_REPORT_ADJUSTMENTS_V2' not in s:
+              s=s.replace('// Ajustes finais dos relatórios:', '// FINAL_REPORT_ADJUSTMENTS_V2\n// Ajustes finais dos relatórios:')
+          f.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          if git diff --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html report-final-adjustments.js
+          git commit -m "Force final report adjustments v2"
+          git push
