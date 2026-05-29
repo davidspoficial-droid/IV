@@ -1,0 +1,27 @@
+name: Remove report fix loader
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-report-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  remove-loader:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove loader from index
+        run: |
+          perl -0pi -e 's#<script src="\./report-fix\.js\?v=2"></script>\n?##g' index.html
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Restore index loading by removing report fix loader"
+          git push
