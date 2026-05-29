@@ -2292,8 +2292,7 @@ function gerarHTMLMobile(data, titulo){
     +'<nav class="top-nav">'+tabsHTML+'</nav>'
     +'<div id="modulos">'+modulosHTML+'</div>'
     +'<script>'+JS+'<\/script>'
-    +'<script src="./report-fix.js?v=2"></script>
-</body></html>';
+    +'</body></html>';
 }
 
 
@@ -2358,8 +2357,7 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.018);}
 .report-footer{text-align:center;color:#8FAACB;font-size:12px;padding:0 34px 28px;}
 @media(max-width:700px){body{padding:16px 10px}.report-header{flex-direction:column;text-align:center;padding:22px 16px}.report-brand{flex-direction:column;gap:10px}.report-logo{width:52px}.report-title{font-size:27px}.report-meta{text-align:center}.report-content{padding:20px 14px 26px}}
 @media print{body{background:#fff!important;color:#0B1A2D!important;padding:0}.report-shell{box-shadow:none;border:1px solid #d9e3ef}.report-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}.report-content>div{break-inside:avoid}}
-</style></head><body><main class="report-shell"><header class="report-header"><div class="report-brand"><img class="report-logo" src="${logoSrc}" alt="Logo Instituto de Vencedores"><div><div class="report-title">Instituto de Vencedores</div><div class="report-subtitle">Relatório de Gestão de Presença</div></div></div><div class="report-meta"><div class="report-badge">Relatório Oficial</div><div>Gerado em ${dt}</div></div></header><section class="report-content">${body}</section><div class="report-footer">Instituto de Vencedores • Sistema de Gestão de Presença</div></main><script src="./report-fix.js?v=2"></script>
-</body></html>`;
+</style></head><body><main class="report-shell"><header class="report-header"><div class="report-brand"><img class="report-logo" src="${logoSrc}" alt="Logo Instituto de Vencedores"><div><div class="report-title">Instituto de Vencedores</div><div class="report-subtitle">Relatório de Gestão de Presença</div></div></div><div class="report-meta"><div class="report-badge">Relatório Oficial</div><div>Gerado em ${dt}</div></div></header><section class="report-content">${body}</section><div class="report-footer">Instituto de Vencedores • Sistema de Gestão de Presença</div></main></body></html>`;
 }
 
 // ══ INIT ══
@@ -2368,6 +2366,5 @@ document.getElementById('pres-modulo').addEventListener('change',()=>{
   refreshEquipeSelects('pres-equipe-filtro');
 });
 </script>
-<script src="./report-fix.js?v=2"></script>
 </body>
 </html>
