@@ -1,10 +1,13 @@
 name: Remove top header buttons
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - '.github/workflows/remove-top-header-buttons.yml'
+      - index.html
+      - .github/workflows/remove-top-header-buttons.yml
 
 permissions:
   contents: write
@@ -14,25 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Remove backup and report buttons from header
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('index.html')
-          h = p.read_text(encoding='utf-8')
-          old = '''  <div class="header-right">
-    <button class="btn btn-ghost btn-sm" onclick="exportarDados()">💾 Salvar Backup</button>
-    <button class="btn btn-blue btn-sm" onclick="showPage('exportar')">📤 Gerar Relatório</button>
-  </div>
-'''
-          if old in h:
-              h = h.replace(old, '')
-          else:
-              import re
-              h = re.sub(r'\s*<div class="header-right">\s*<button class="btn btn-ghost btn-sm" onclick="exportarDados\(\)">.*?</button>\s*<button class="btn btn-blue btn-sm" onclick="showPage\(\'exportar\'\)">.*?</button>\s*</div>\s*', '\n', h, count=1, flags=re.S)
-          p.write_text(h, encoding='utf-8')
-          PY
+        shell: bash
+        run: python3 .github/scripts/remove-top-header-buttons.py
+
       - name: Commit change
+        shell: bash
         run: |
           if git diff --quiet; then
             echo "No changes"
