@@ -8,6 +8,7 @@ on:
     paths:
       - index.html
       - .github/workflows/hide-header-right-buttons.yml
+      - .github/scripts/hide-header-right-buttons.py
 
 permissions:
   contents: write
