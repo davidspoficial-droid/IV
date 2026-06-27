@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IV Gestão - Acesso</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="./mobile-upgrade.css">
+<link rel="icon" type="image/png" href="./IV.png">
+<meta name="theme-color" content="#030712">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050A14;color:#E8F0FF;font-family:Arial,sans-serif;min-height:100vh}.login{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(circle at top,#0A1A40,#050A14 60%);padding:20px}.card{width:min(430px,100%);background:#0D1626;border:1px solid #1E2E4A;border-radius:24px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.45)}.logo{width:58px;height:58px;border-radius:14px}h1{margin:14px 0 8px;font-size:30px}p{color:#87A2C6;line-height:1.5;font-size:14px}label{display:block;color:#87A2C6;font-weight:700;font-size:12px;margin:12px 0 6px}input{width:100%;padding:12px;border-radius:12px;border:1px solid #1E2E4A;background:#111D33;color:#E8F0FF}button{border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer;background:#4A90D9;color:white}.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.error{color:#ff9a9a;font-size:12px;margin-top:10px;min-height:16px}.top{height:48px;background:#071020;border-bottom:1px solid #1E2E4A;display:flex;align-items:center;gap:10px;padding:0 12px}.top img{width:32px;height:32px}.top b{margin-right:auto}iframe{width:100%;height:calc(100vh - 48px);border:0;background:#050A14}.hidden{display:none!important}@media(max-width:820px){.top{display:none}iframe{height:100vh}.card{border-radius:24px}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+  <div class="card">
+    <img class="logo" src="./IV.png" alt="IV">
+    <h1>Acesso seguro</h1>
+    <p>Entre para acessar o sistema IV. Usuario administrador inicial: <b>administrador</b>.</p>
+    <label>Usuario</label>
+    <input id="user" autocomplete="username" value="administrador">
+    <label>Senha</label>
+    <input id="pass" type="password" autocomplete="current-password">
+    <div class="btns"><button onclick="entrar()">Entrar</button></div>
+    <div id="erro" class="error"></div>
+  </div>
+</div>
+<div id="shell" class="hidden">
+  <div class="top"><img src="./IV.png" alt="IV"><b>IV Gestão</b><span id="who"></span><button onclick="sair()">Sair</button></div>
+  <iframe id="frame" src="./index.html"></iframe>
+</div>
+<script>
+const KEY='iv_shell_session';
+const ADMIN_USER='administrador';
+const ADMIN_PASS='IV@2026';
+function entrar(){
+  const u=document.getElementById('user').value.trim().toLowerCase();
+  const p=document.getElementById('pass').value;
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    localStorage.setItem(KEY,JSON.stringify({user:u,admin:true,ts:Date.now()}));
+    abrir();
+  }else{
+    document.getElementById('erro').textContent='Usuario ou senha incorretos.';
+  }
+}
+function abrir(){
+  const s=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(!s)return;
+  document.getElementById('who').textContent=s.user;
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('shell').classList.remove('hidden');
+  document.body.classList.toggle('iv-mobile-mode',innerWidth<=820);
+}
+function sair(){localStorage.removeItem(KEY);location.reload();}
+if(localStorage.getItem(KEY))abrir();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').catch(()=>{});}
+addEventListener('resize',()=>document.body.classList.toggle('iv-mobile-mode',innerWidth<=820));
+</script>
+</body>
+</html>
