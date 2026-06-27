@@ -35,10 +35,44 @@
   const auth = getAuth(app);
   const db  = getFirestore(app);
   const DOC_REF = doc(db, "sistema", "dados");
+  const USERNAME_REF = (username) => doc(db, "loginUsuarios", username);
+
+  function normalizarUsernameFirebase(valor) {
+    return String(valor || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9._-]/g, '');
+  }
 
   // Expõe funções ao escopo global para o app usar
   window._firebase = {
-    login(email, senha) {
+    async login(usernameDigitado, senha) {
+      const entrada = (usernameDigitado || '').trim().toLowerCase();
+
+      if(!entrada || entrada.includes('@')){
+        const err = new Error('Use apenas o username.');
+        err.code = 'auth/username-only';
+        throw err;
+      }
+
+      const username = normalizarUsernameFirebase(entrada);
+      const snapUser = await getDoc(USERNAME_REF(username));
+
+      if(!snapUser.exists()){
+        const err = new Error('Usuário não encontrado.');
+        err.code = 'auth/username-not-found';
+        throw err;
+      }
+
+      const email = (snapUser.data().email || '').toLowerCase();
+      if(!email){
+        const err = new Error('Username sem e-mail vinculado.');
+        err.code = 'auth/username-without-email';
+        throw err;
+      }
+
       return signInWithEmailAndPassword(auth, email, senha);
     },
     currentUser() {
@@ -54,6 +88,20 @@
       } finally {
         await deleteApp(secondaryApp).catch(()=>{});
       }
+    },
+    async usernameExiste(username) {
+      const snapUser = await getDoc(USERNAME_REF(normalizarUsernameFirebase(username)));
+      return snapUser.exists();
+    },
+    async salvarUsername(username, email, uid) {
+      const cleanUsername = normalizarUsernameFirebase(username);
+      await setDoc(USERNAME_REF(cleanUsername), {
+        username: cleanUsername,
+        email: (email || '').toLowerCase(),
+        uid: uid || '',
+        atualizadoEm: new Date().toISOString()
+      });
+      return true;
     },
     logout() {
       return signOut(auth);
@@ -1074,8 +1122,160 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
+/* Username vinculado ao e-mail */
+#usr-username{text-transform:lowercase;}
+
+
+
+
+/* ÍCONES SVG PREMIUM NOS CAMPOS DE LOGIN */
+#auth-screen .auth-input-wrap{
+  position:relative;
+  width:100%;
+  display:flex;
+  align-items:center;
+}
+
+#auth-screen .auth-input-icon{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:22px;
+  height:22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#BFEAFF;
+  z-index:3;
+  filter:
+    drop-shadow(0 8px 10px rgba(0,0,0,.44))
+    drop-shadow(0 0 12px rgba(126,200,240,.52));
+  pointer-events:none;
+}
+
+#auth-screen .auth-input-icon svg{
+  width:20px;
+  height:20px;
+  display:block;
+}
+
+#auth-screen .auth-input-with-icon{
+  padding-left:48px!important;
+}
+
+#auth-screen .auth-input-wrap:focus-within .auth-input-icon{
+  color:#FFFFFF;
+  filter:
+    drop-shadow(0 10px 14px rgba(0,0,0,.50))
+    drop-shadow(0 0 18px rgba(126,200,240,.78))
+    drop-shadow(0 0 34px rgba(47,128,237,.40));
+}
+
+#auth-screen .auth-password-wrap .auth-input-with-icon{
+  padding-right:50px!important;
+}
+
+/* Olho premium sem moldura, apenas sombra/glow */
+.login-password-eye{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:none;
+}
+
+.login-password-eye .eye-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  color:#DFF6FF;
+  filter:
+    drop-shadow(0 8px 10px rgba(0,0,0,.44))
+    drop-shadow(0 0 12px rgba(126,200,240,.48));
+}
+
+.login-password-eye .eye-icon svg{
+  width:21px;
+  height:21px;
+  display:block;
+}
+
+.login-password-eye .eye-icon-hide{
+  display:none;
+}
+
+.login-password-eye.is-visible .eye-icon-show{
+  display:none;
+}
+
+.login-password-eye.is-visible .eye-icon-hide{
+  display:inline-flex;
+}
+
+.login-password-eye:hover .eye-icon,
+.login-password-eye:focus-visible .eye-icon{
+  color:#FFFFFF;
+  filter:
+    drop-shadow(0 10px 14px rgba(0,0,0,.52))
+    drop-shadow(0 0 20px rgba(126,200,240,.82))
+    drop-shadow(0 0 36px rgba(47,128,237,.42));
+}
+
+
+/* EFEITO VERMELHO PREMIUM NO BOTÃO SAIR */
+.auth-logout{
+  background:
+    linear-gradient(135deg,rgba(224,85,85,.18),rgba(120,18,32,.16))!important;
+  border:1px solid rgba(255,92,92,.42)!important;
+  color:#FFE7E7!important;
+  box-shadow:
+    0 16px 34px rgba(0,0,0,.28),
+    0 0 18px rgba(224,85,85,.18),
+    inset 0 1px 0 rgba(255,255,255,.10)!important;
+}
+
+.auth-logout:hover{
+  background:
+    linear-gradient(135deg,rgba(255,92,92,.28),rgba(160,28,45,.22))!important;
+  border-color:rgba(255,112,112,.72)!important;
+  color:#FFFFFF!important;
+  transform:translateY(-1px)!important;
+  box-shadow:
+    0 20px 44px rgba(0,0,0,.34),
+    0 0 26px rgba(224,85,85,.34),
+    0 0 52px rgba(224,85,85,.16),
+    inset 0 1px 0 rgba(255,255,255,.16)!important;
+}
+
+.auth-logout-icon{
+  background:
+    radial-gradient(circle at 30% 20%,rgba(255,150,150,.38),rgba(224,85,85,.16))!important;
+  border:1px solid rgba(255,112,112,.42)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 10px 20px rgba(0,0,0,.30),
+    0 0 18px rgba(224,85,85,.26)!important;
+}
+
+.auth-logout-icon svg path{
+  stroke:#FFE7E7!important;
+  filter:
+    drop-shadow(0 0 6px rgba(255,120,120,.48))
+    drop-shadow(0 0 14px rgba(224,85,85,.34));
+}
+
+.auth-logout:hover .auth-logout-icon{
+  background:
+    radial-gradient(circle at 30% 20%,rgba(255,190,190,.48),rgba(224,85,85,.24))!important;
+  border-color:rgba(255,140,140,.74)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 12px 24px rgba(0,0,0,.34),
+    0 0 24px rgba(224,85,85,.42),
+    0 0 46px rgba(224,85,85,.20)!important;
+}
 
 </style>
 </head>
@@ -1089,13 +1289,41 @@ body.auth-lock #loading-overlay,
       <h1>Instituto de Vencedores</h1>
     </div>
 
-    <label>E-mail</label>
-    <input id="auth-email" type="email" placeholder="seuemail@exemplo.com" autocomplete="username">
+    <label>Username</label>
+    <div class="auth-input-wrap">
+      <span class="auth-input-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 12.25c2.35 0 4.25-1.9 4.25-4.25S14.35 3.75 12 3.75 7.75 5.65 7.75 8s1.9 4.25 4.25 4.25Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M4.75 20.25c.62-3.25 3.4-5.5 7.25-5.5s6.63 2.25 7.25 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </span>
+      <input id="auth-email" class="auth-input-with-icon" type="text" placeholder="Digite seu username" autocomplete="username">
+    </div>
 
     <label>Senha</label>
-    <div class="login-password-wrap">
-      <input id="auth-senha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
-      <button type="button" class="login-password-eye" onclick="toggleSenhaLogin()" aria-label="Mostrar ou ocultar senha">👁</button>
+    <div class="login-password-wrap auth-input-wrap auth-password-wrap">
+      <span class="auth-input-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7.25 10.25V8.4c0-2.75 2.05-4.9 4.75-4.9s4.75 2.15 4.75 4.9v1.85" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M6.6 10.25h10.8c1.05 0 1.9.85 1.9 1.9v6.2c0 1.05-.85 1.9-1.9 1.9H6.6c-1.05 0-1.9-.85-1.9-1.9v-6.2c0-1.05.85-1.9 1.9-1.9Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 14.35v2.25" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </span>
+      <input id="auth-senha" class="auth-input-with-icon" type="password" placeholder="Digite sua senha" autocomplete="current-password">
+      <button type="button" class="login-password-eye" onclick="toggleSenhaLogin()" aria-label="Mostrar ou ocultar senha"><span class="eye-icon eye-icon-show" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M3.75 12s2.85-5.25 8.25-5.25S20.25 12 20.25 12s-2.85 5.25-8.25 5.25S3.75 12 3.75 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 14.45A2.45 2.45 0 1 0 12 9.55a2.45 2.45 0 0 0 0 4.9Z" stroke="currentColor" stroke-width="1.8"/>
+        </svg>
+      </span>
+      <span class="eye-icon eye-icon-hide" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4.5 4.5l15 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M9.35 6.95A8.62 8.62 0 0 1 12 6.55c5.4 0 8.25 5.45 8.25 5.45a15.4 15.4 0 0 1-2.25 3.05" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14.15 14.45A2.45 2.45 0 0 1 9.55 9.85" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M6.85 8.25A14.4 14.4 0 0 0 3.75 12s2.85 5.45 8.25 5.45c1.1 0 2.1-.22 3-.58" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span></button>
     </div>
 
     <button class="auth-enter-btn" onclick="entrarSistema()">Entrar</button>
@@ -1283,13 +1511,17 @@ body.auth-lock #loading-overlay,
 
   <div class="card" style="margin-bottom:20px">
     <div class="card-title">Cadastrar novo usuário</div>
-    <div class="form-row">
+    <div class="form-row tri">
       <div>
         <label>Nome</label>
         <input id="usr-nome" placeholder="Nome do usuário">
       </div>
       <div>
-        <label>E-mail de acesso</label>
+        <label>Username de acesso</label>
+        <input id="usr-username" type="text" placeholder="ex: joao.silva" autocomplete="off"><div class="hint" style="margin-top:5px;font-size:11px;color:var(--muted)">Será o único dado usado na tela de login. O e-mail fica apenas vinculado internamente.</div>
+      </div>
+      <div>
+        <label>E-mail vinculado</label>
         <input id="usr-email" type="email" placeholder="usuario@email.com">
       </div>
     </div>
@@ -1299,7 +1531,20 @@ body.auth-lock #loading-overlay,
         <label>Senha provisória</label>
         <div class="login-password-wrap">
           <input id="usr-senha" type="password" placeholder="Mínimo 6 caracteres">
-          <button type="button" class="login-password-eye" onclick="toggleSenhaCampo('usr-senha', this)" aria-label="Mostrar ou ocultar senha">👁</button>
+          <button type="button" class="login-password-eye" onclick="toggleSenhaCampo('usr-senha', this)" aria-label="Mostrar ou ocultar senha"><span class="eye-icon eye-icon-show" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M3.75 12s2.85-5.25 8.25-5.25S20.25 12 20.25 12s-2.85 5.25-8.25 5.25S3.75 12 3.75 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 14.45A2.45 2.45 0 1 0 12 9.55a2.45 2.45 0 0 0 0 4.9Z" stroke="currentColor" stroke-width="1.8"/>
+        </svg>
+      </span>
+      <span class="eye-icon eye-icon-hide" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4.5 4.5l15 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M9.35 6.95A8.62 8.62 0 0 1 12 6.55c5.4 0 8.25 5.45 8.25 5.45a15.4 15.4 0 0 1-2.25 3.05" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14.15 14.45A2.45 2.45 0 0 1 9.55 9.85" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M6.85 8.25A14.4 14.4 0 0 0 3.75 12s2.85 5.45 8.25 5.45c1.1 0 2.1-.22 3-.58" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span></button>
         </div>
       </div>
       <div>
@@ -1383,7 +1628,8 @@ body.auth-lock #loading-overlay,
         <thead>
           <tr>
             <th>Nome</th>
-            <th>E-mail</th>
+            <th>Usuário</th>
+            <th>E-mail vinculado</th>
             <th>Perfil</th>
             <th>Permissões</th>
             <th style="width:120px;text-align:center">Status</th>
@@ -1749,6 +1995,19 @@ function saveDB(){
 function newId(){ return nextId++; }
 
 
+function normalizarUsername(valor){
+  return String(valor || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9._-]/g, '');
+}
+
+function usernameValido(username){
+  return /^[a-z0-9._-]{3,24}$/.test(username);
+}
+
 const PERMISSOES_LABELS = {
   dashboard_view:'Dashboard: visualizar painel',
   alunos_view:'Alunos: visualizar lista',
@@ -1816,9 +2075,11 @@ async function garantirUsuarioAdminInicial(){
   let perfil = getUsuarioAtual();
 
   if(!perfil && DB.usuarios.length === 0){
+    const usernameAdmin = normalizarUsername((atual.email || '').split('@')[0] || 'admin');
     perfil = {
       uid: atual.uid,
       nome: 'Administrador',
+      username: usernameAdmin,
       email: atual.email,
       perfil: 'administrador',
       ativo: true,
@@ -1826,7 +2087,15 @@ async function garantirUsuarioAdminInicial(){
       criadoEm: new Date().toISOString()
     };
     DB.usuarios.push(perfil);
+    await window._firebase.salvarUsername(usernameAdmin, atual.email, atual.uid).catch(()=>{});
     await window._firebase.save(DB).catch(()=>{});
+  } else if(perfil && !perfil.username) {
+    const usernameAdmin = normalizarUsername((perfil.email || atual.email || '').split('@')[0] || 'admin');
+    if(usernameValido(usernameAdmin) && !(DB.usuarios||[]).some(u => u !== perfil && normalizarUsername(u.username) === usernameAdmin)){
+      perfil.username = usernameAdmin;
+      await window._firebase.salvarUsername(usernameAdmin, perfil.email || atual.email, perfil.uid || atual.uid).catch(()=>{});
+      await window._firebase.save(DB).catch(()=>{});
+    }
   }
 
   CURRENT_PROFILE = perfil || getUsuarioAtual();
@@ -1894,7 +2163,7 @@ function aplicarPerfilUsuario(){
 }
 
 function limparFormUsuario(){
-  ['usr-nome','usr-email','usr-senha'].forEach(id=>document.getElementById(id).value='');
+  ['usr-nome','usr-username','usr-email','usr-senha'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('usr-perfil').value='operador';
   aplicarPerfilUsuario();
 }
@@ -1906,13 +2175,19 @@ async function cadastrarUsuarioSistema(){
   }
 
   const nome = document.getElementById('usr-nome').value.trim();
+  const username = normalizarUsername(document.getElementById('usr-username').value);
   const email = document.getElementById('usr-email').value.trim().toLowerCase();
   const senha = document.getElementById('usr-senha').value;
   const perfil = document.getElementById('usr-perfil').value;
   const permissoes = permissoesSelecionadas();
 
-  if(!nome || !email || !senha){
-    toast('Informe nome, e-mail e senha.', true);
+  if(!nome || !username || !email || !senha){
+    toast('Informe nome, username, e-mail e senha.', true);
+    return;
+  }
+
+  if(!usernameValido(username)){
+    toast('Username inválido. Use 3 a 24 caracteres: letras, números, ponto, traço ou underline.', true);
     return;
   }
   if(senha.length < 6){
@@ -1924,18 +2199,30 @@ async function cadastrarUsuarioSistema(){
     return;
   }
 
+  if((DB.usuarios||[]).some(u => normalizarUsername(u.username) === username)){
+    toast('Este username já está cadastrado.', true);
+    return;
+  }
+
   try{
+    const usernameJaExiste = await window._firebase.usernameExiste(username).catch(()=>false);
+    if(usernameJaExiste){
+      toast('Este username já existe no índice de login.', true);
+      return;
+    }
     showSync('saving','🔐 Criando usuário...');
     const novoAuth = await window._firebase.createUser(email, senha);
     DB.usuarios.push({
       uid: novoAuth.uid,
       nome,
+      username,
       email,
       perfil,
       ativo:true,
       permissoes,
       criadoEm:new Date().toISOString()
     });
+    await window._firebase.salvarUsername(username, email, novoAuth.uid);
     await window._firebase.save(DB);
     renderUsuarios();
     aplicarPermissoesUI();
@@ -1949,6 +2236,7 @@ async function cadastrarUsuarioSistema(){
     if(e.code === 'auth/email-already-in-use') msg = 'Este e-mail já existe no Firebase Authentication.';
     if(e.code === 'auth/weak-password') msg = 'A senha é fraca. Use pelo menos 6 caracteres.';
     if(e.code === 'auth/invalid-email') msg = 'E-mail inválido.';
+    if(e.code === 'permission-denied') msg = 'Sem permissão para gravar/ler o username. Ajuste as regras do Firestore.';
     toast(msg, true);
   }
 }
@@ -1959,7 +2247,7 @@ function renderUsuarios(){
   normalizarDB();
 
   if(!userCan('usuarios_view')){
-    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:18px">Você não tem permissão para visualizar usuários.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:18px">Você não tem permissão para visualizar usuários.</td></tr>';
     return;
   }
 
@@ -1968,6 +2256,7 @@ function renderUsuarios(){
     const ativo = u.ativo !== false;
     return `<tr>
       <td><strong>${u.nome||'—'}</strong></td>
+      <td><span class="user-pill">${u.username||'—'}</span></td>
       <td>${u.email||'—'}</td>
       <td><span class="user-pill">${u.perfil||'operador'}</span></td>
       <td style="color:var(--muted);font-size:12px">${perms||'—'}</td>
@@ -1976,7 +2265,7 @@ function renderUsuarios(){
         <button class="btn btn-xs btn-ghost" onclick="alternarUsuarioAtivo(${idx})">${ativo?'Bloquear':'Ativar'}</button>
       </td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:18px">Nenhum usuário cadastrado.</td></tr>';
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:18px">Nenhum usuário cadastrado.</td></tr>';
 }
 
 function alternarUsuarioAtivo(idx){
@@ -1993,14 +2282,15 @@ function alternarUsuarioAtivo(idx){
 }
 
 function toggleSenhaLogin(){
-  toggleSenhaCampo('auth-senha');
+  const btn = document.querySelector('#auth-screen .login-password-eye');
+  toggleSenhaCampo('auth-senha', btn);
 }
 
 function toggleSenhaCampo(id, btn){
   const input = document.getElementById(id);
   if(!input) return;
   input.type = input.type === 'password' ? 'text' : 'password';
-  if(btn) btn.textContent = input.type === 'password' ? '👁' : '🙈';
+  if(btn) btn.classList.toggle('is-visible', input.type === 'text');
 }
 
 
@@ -2501,7 +2791,7 @@ function renderPresencaTabela(){
 
   const tb=document.getElementById('tb-presenca');
   if(!alunos.length){
-    tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno ativo neste módulo</td></tr>';
+    tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno ativo neste módulo</td></tr>';
     return;
   }
 
@@ -3413,22 +3703,32 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.018);}
 let appJaCarregado = false;
 
 window.entrarSistema = async function(){
-  const email = document.getElementById('auth-email').value.trim();
+  const username = document.getElementById('auth-email').value.trim();
   const senha = document.getElementById('auth-senha').value;
   const erro = document.getElementById('auth-error');
 
   erro.textContent = '';
 
-  if(!email || !senha){
-    erro.textContent = 'Informe o e-mail e a senha.';
+  if(!username || !senha){
+    erro.textContent = 'Informe o username e a senha.';
     return;
   }
 
   try{
-    await window._firebase.login(email, senha);
+    await window._firebase.login(username, senha);
   }catch(e){
     console.error(e);
-    erro.textContent = 'E-mail ou senha incorretos.';
+    if(e.code === 'auth/username-only'){
+      erro.textContent = 'Digite apenas o username. Não use e-mail para entrar.';
+    } else if(e.code === 'auth/username-not-found'){
+      erro.textContent = 'Username não encontrado.';
+    } else if(e.code === 'auth/username-without-email'){
+      erro.textContent = 'Este username não possui e-mail vinculado.';
+    } else if(e.code === 'permission-denied'){
+      erro.textContent = 'Sem permissão para consultar o username. Ajuste as regras do Firestore.';
+    } else {
+      erro.textContent = 'Username ou senha incorretos.';
+    }
   }
 };
 
