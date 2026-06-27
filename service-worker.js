@@ -1,4 +1,4 @@
-const IV_CACHE = 'iv-gestao-v4';
+const IV_CACHE = 'iv-gestao-v5';
 const IV_ASSETS = [
   './manifest.json',
   './IV.png',
@@ -16,7 +16,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== IV_CACHE).map(key => caches.delete(key))))
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -29,11 +29,7 @@ self.addEventListener('fetch', event => {
   const isScript = url.pathname.endsWith('.js');
 
   if (isHtml || isScript) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => response)
-        .catch(() => caches.match('./index.html'))
-    );
+    event.respondWith(fetch(event.request));
     return;
   }
 
