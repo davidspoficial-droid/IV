@@ -14,10 +14,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // ══ CONFIG FIREBASE ══
   const firebaseConfig = {
@@ -40,6 +40,20 @@
   window._firebase = {
     login(email, senha) {
       return signInWithEmailAndPassword(auth, email, senha);
+    },
+    currentUser() {
+      return auth.currentUser;
+    },
+    async createUser(email, senha) {
+      const secondaryApp = initializeApp(firebaseConfig, "secondary-user-" + Date.now());
+      try {
+        const secondaryAuth = getAuth(secondaryApp);
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, senha);
+        await signOut(secondaryAuth).catch(()=>{});
+        return { uid: cred.user.uid, email: cred.user.email };
+      } finally {
+        await deleteApp(secondaryApp).catch(()=>{});
+      }
     },
     logout() {
       return signOut(auth);
@@ -825,8 +839,73 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
+/* LOGIN — OLHO DA SENHA */
+.login-password-wrap{
+  position:relative;
+  width:100%;
+}
+.login-password-wrap input{
+  padding-right:52px!important;
+}
+.login-password-eye{
+  position:absolute!important;
+  right:9px;
+  top:50%;
+  transform:translateY(-50%);
+  width:36px!important;
+  height:36px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid rgba(126,200,240,.24)!important;
+  border-radius:12px!important;
+  background:rgba(126,200,240,.08)!important;
+  color:#DDF4FF!important;
+  box-shadow:0 10px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  cursor:pointer;
+}
+.login-password-eye:hover{
+  background:rgba(126,200,240,.16)!important;
+  color:#fff!important;
+}
+
+/* USUÁRIOS */
+.perm-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:10px;
+  margin-top:8px;
+}
+.perm-card{
+  border:1px solid rgba(126,200,240,.18);
+  background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border-radius:14px;
+  padding:11px 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#DDF4FF;
+  font-size:13px;
+  font-weight:700;
+}
+.perm-card input{
+  width:auto;
+  accent-color:#7EC8F0;
+}
+.user-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 9px;
+  border-radius:999px;
+  border:1px solid rgba(126,200,240,.24);
+  background:rgba(126,200,240,.08);
+  color:#BFEAFF;
+  font-size:11px;
+  font-weight:800;
+}
 
 </style>
 </head>
@@ -844,9 +923,12 @@ body.auth-lock #loading-overlay,
     <input id="auth-email" type="email" placeholder="seuemail@exemplo.com" autocomplete="username">
 
     <label>Senha</label>
-    <input id="auth-senha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
+    <div class="login-password-wrap">
+      <input id="auth-senha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
+      <button type="button" class="login-password-eye" onclick="toggleSenhaLogin()" aria-label="Mostrar ou ocultar senha">👁</button>
+    </div>
 
-    <button onclick="entrarSistema()">Entrar</button>
+    <button class="auth-enter-btn" onclick="entrarSistema()">Entrar</button>
     <div id="auth-error"></div>
   </div>
 </div>
@@ -893,6 +975,7 @@ body.auth-lock #loading-overlay,
   <button class="mnav" onclick="showPage('equipes',this)">👥 Equipes</button>
   <button class="mnav" onclick="showPage('presenca',this)">✅ Presença</button>
   <button class="mnav" onclick="showPage('exportar',this)">📤 Gerar Relatório</button>
+  <button class="mnav" onclick="showPage('usuarios',this)">🔐 Usuários</button>
 </nav>
 
 <!-- ══ DASHBOARD ══ -->
@@ -1020,6 +1103,79 @@ body.auth-lock #loading-overlay,
       </thead>
       <tbody id="tb-presenca"></tbody>
     </table>
+  </div>
+</div>
+
+
+<!-- ══ USUÁRIOS ══ -->
+<div id="page-usuarios" class="page">
+  <div class="stitle">🔐 Usuários e Permissões</div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Cadastrar novo usuário</div>
+    <div class="form-row">
+      <div>
+        <label>Nome</label>
+        <input id="usr-nome" placeholder="Nome do usuário">
+      </div>
+      <div>
+        <label>E-mail de acesso</label>
+        <input id="usr-email" type="email" placeholder="usuario@email.com">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label>Senha provisória</label>
+        <div class="login-password-wrap">
+          <input id="usr-senha" type="password" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="login-password-eye" onclick="toggleSenhaCampo('usr-senha', this)" aria-label="Mostrar ou ocultar senha">👁</button>
+        </div>
+      </div>
+      <div>
+        <label>Perfil</label>
+        <select id="usr-perfil" onchange="aplicarPerfilUsuario()">
+          <option value="administrador">Administrador</option>
+          <option value="gestor">Gestor</option>
+          <option value="operador">Operador</option>
+          <option value="consulta">Consulta</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Permissões</label>
+    <div class="perm-grid">
+      <label class="perm-card"><input type="checkbox" class="usr-perm" value="dashboard" checked> Dashboard</label>
+      <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos" checked> Alunos</label>
+      <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes" checked> Equipes</label>
+      <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca" checked> Presença</label>
+      <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios" checked> Relatórios</label>
+      <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios" checked> Usuários</label>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="limparFormUsuario()">Limpar</button>
+      <button class="btn btn-blue" onclick="cadastrarUsuarioSistema()">Cadastrar usuário</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Usuários cadastrados</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Perfil</th>
+            <th>Permissões</th>
+            <th style="width:120px;text-align:center">Status</th>
+            <th style="width:120px;text-align:center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tb-usuarios"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -1284,8 +1440,11 @@ const MODULOS = {
 let DB = {
   alunos: [],
   equipes: [],
-  presencas: {}
+  presencas: {},
+  usuarios: []
 };
+let CURRENT_USER = null;
+let CURRENT_PROFILE = null;
 let nextId = 1;
 let _saveTimeout = null;
 let _ignoreSnapshot = false;
@@ -1315,18 +1474,25 @@ async function loadDB(){
       DB = data;
       nextId = DB._nextId || 1;
     }
+    normalizarDB();
+    await garantirUsuarioAdminInicial();
   } catch(e){
     console.warn('Firebase load falhou, usando estado vazio:', e);
   }
-  // Esconde loading
-  overlay.classList.add('hide');
-  setTimeout(()=>overlay.style.display='none', 400);
+  // Esconde loading, se existir
+  if(overlay){
+    overlay.classList.add('hide');
+    setTimeout(()=>overlay.style.display='none', 400);
+  }
   // Renderiza tudo
   renderDashboard();
   renderAlunos();
   renderEquipes();
   refreshEquipeSelects();
   initPresenca();
+  renderUsuarios();
+  aplicarPerfilUsuario();
+  aplicarPermissoesUI();
 
   // Ouve mudanças em tempo real (multi-dispositivo)
   if(window._firebase && window._firebase.onSnapshot){
@@ -1334,10 +1500,14 @@ async function loadDB(){
       if(_ignoreSnapshot) return;
       DB = remoteData;
       nextId = DB._nextId || 1;
+      normalizarDB();
+      CURRENT_PROFILE = getUsuarioAtual();
       renderDashboard();
       renderAlunos();
       renderEquipes();
+      renderUsuarios();
       refreshEquipeSelects();
+      aplicarPermissoesUI();
     });
   }
 }
@@ -1361,6 +1531,203 @@ function saveDB(){
 
 function newId(){ return nextId++; }
 
+
+const PERFIS_PERMISSOES = {
+  administrador:{dashboard:true,alunos:true,equipes:true,presenca:true,relatorios:true,usuarios:true},
+  gestor:{dashboard:true,alunos:true,equipes:true,presenca:true,relatorios:true,usuarios:false},
+  operador:{dashboard:true,alunos:true,equipes:false,presenca:true,relatorios:false,usuarios:false},
+  consulta:{dashboard:true,alunos:false,equipes:false,presenca:false,relatorios:true,usuarios:false}
+};
+const PAGE_AREA = {dashboard:'dashboard',alunos:'alunos',equipes:'equipes',presenca:'presenca',exportar:'relatorios',usuarios:'usuarios'};
+
+function normalizarDB(){
+  if(!DB.alunos) DB.alunos=[];
+  if(!DB.equipes) DB.equipes=[];
+  if(!DB.presencas) DB.presencas={};
+  if(!DB.usuarios) DB.usuarios=[];
+}
+
+function getUsuarioAtual(){
+  const email = (CURRENT_USER && CURRENT_USER.email || '').toLowerCase();
+  const uid = CURRENT_USER && CURRENT_USER.uid;
+  return (DB.usuarios||[]).find(u => (u.uid && u.uid===uid) || ((u.email||'').toLowerCase()===email)) || null;
+}
+
+function isAdminAtual(){
+  const u = getUsuarioAtual();
+  return !u || u.perfil === 'administrador' || (u.permissoes && u.permissoes.usuarios === true);
+}
+
+function userCan(area){
+  const u = getUsuarioAtual();
+  if(!u) return true; // primeiro acesso vira administrador
+  if(u.ativo === false) return false;
+  if(u.perfil === 'administrador') return true;
+  return !!(u.permissoes && u.permissoes[area]);
+}
+
+async function garantirUsuarioAdminInicial(){
+  normalizarDB();
+  const atual = window._firebase && window._firebase.currentUser ? window._firebase.currentUser() : null;
+  if(!atual || !atual.email) return;
+
+  CURRENT_USER = {uid:atual.uid,email:atual.email};
+  let perfil = getUsuarioAtual();
+
+  if(!perfil && DB.usuarios.length === 0){
+    perfil = {
+      uid: atual.uid,
+      nome: 'Administrador',
+      email: atual.email,
+      perfil: 'administrador',
+      ativo: true,
+      permissoes: {...PERFIS_PERMISSOES.administrador},
+      criadoEm: new Date().toISOString()
+    };
+    DB.usuarios.push(perfil);
+    await window._firebase.save(DB).catch(()=>{});
+  }
+
+  CURRENT_PROFILE = perfil || getUsuarioAtual();
+}
+
+function aplicarPermissoesUI(){
+  document.querySelectorAll('.main-nav .mnav').forEach(btn=>{
+    const txt = btn.getAttribute('onclick') || '';
+    const match = txt.match(/showPage\('([^']+)'/);
+    if(!match) return;
+    const page = match[1];
+    const area = PAGE_AREA[page] || page;
+    btn.style.display = userCan(area) ? '' : 'none';
+  });
+}
+
+function permissoesSelecionadas(){
+  const obj = {};
+  document.querySelectorAll('.usr-perm').forEach(chk=>obj[chk.value]=chk.checked);
+  return obj;
+}
+
+function setPermissoesForm(perms){
+  document.querySelectorAll('.usr-perm').forEach(chk=>chk.checked = !!perms[chk.value]);
+}
+
+function aplicarPerfilUsuario(){
+  const perfil = document.getElementById('usr-perfil').value;
+  setPermissoesForm(PERFIS_PERMISSOES[perfil] || PERFIS_PERMISSOES.operador);
+}
+
+function limparFormUsuario(){
+  ['usr-nome','usr-email','usr-senha'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('usr-perfil').value='operador';
+  aplicarPerfilUsuario();
+}
+
+async function cadastrarUsuarioSistema(){
+  if(!isAdminAtual()){
+    toast('Você não tem permissão para cadastrar usuários.', true);
+    return;
+  }
+
+  const nome = document.getElementById('usr-nome').value.trim();
+  const email = document.getElementById('usr-email').value.trim().toLowerCase();
+  const senha = document.getElementById('usr-senha').value;
+  const perfil = document.getElementById('usr-perfil').value;
+  const permissoes = permissoesSelecionadas();
+
+  if(!nome || !email || !senha){
+    toast('Informe nome, e-mail e senha.', true);
+    return;
+  }
+  if(senha.length < 6){
+    toast('A senha precisa ter pelo menos 6 caracteres.', true);
+    return;
+  }
+  if((DB.usuarios||[]).some(u => (u.email||'').toLowerCase() === email)){
+    toast('Este e-mail já está cadastrado na lista de usuários.', true);
+    return;
+  }
+
+  try{
+    showSync('saving','🔐 Criando usuário...');
+    const novoAuth = await window._firebase.createUser(email, senha);
+    DB.usuarios.push({
+      uid: novoAuth.uid,
+      nome,
+      email,
+      perfil,
+      ativo:true,
+      permissoes,
+      criadoEm:new Date().toISOString()
+    });
+    await window._firebase.save(DB);
+    renderUsuarios();
+    aplicarPermissoesUI();
+    limparFormUsuario();
+    showSync('saved','✅ Usuário criado');
+    toast('Usuário criado com sucesso.');
+  }catch(e){
+    console.error(e);
+    showSync('error','❌ Erro');
+    let msg = 'Erro ao criar usuário.';
+    if(e.code === 'auth/email-already-in-use') msg = 'Este e-mail já existe no Firebase Authentication.';
+    if(e.code === 'auth/weak-password') msg = 'A senha é fraca. Use pelo menos 6 caracteres.';
+    if(e.code === 'auth/invalid-email') msg = 'E-mail inválido.';
+    toast(msg, true);
+  }
+}
+
+function renderUsuarios(){
+  const tb = document.getElementById('tb-usuarios');
+  if(!tb) return;
+  normalizarDB();
+
+  if(!isAdminAtual()){
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:18px">Você não tem permissão para visualizar usuários.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = DB.usuarios.map((u,idx)=>{
+    const perms = Object.entries(u.permissoes||{}).filter(([k,v])=>v).map(([k])=>k).join(', ');
+    const ativo = u.ativo !== false;
+    return `<tr>
+      <td><strong>${u.nome||'—'}</strong></td>
+      <td>${u.email||'—'}</td>
+      <td><span class="user-pill">${u.perfil||'operador'}</span></td>
+      <td style="color:var(--muted);font-size:12px">${perms||'—'}</td>
+      <td style="text-align:center">${ativo?'<span class="badge badge-g">Ativo</span>':'<span class="badge badge-r">Inativo</span>'}</td>
+      <td style="text-align:center">
+        <button class="btn btn-xs btn-ghost" onclick="alternarUsuarioAtivo(${idx})">${ativo?'Bloquear':'Ativar'}</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:18px">Nenhum usuário cadastrado.</td></tr>';
+}
+
+function alternarUsuarioAtivo(idx){
+  if(!isAdminAtual()) return toast('Sem permissão.', true);
+  if(!DB.usuarios[idx]) return;
+  const atual = window._firebase && window._firebase.currentUser ? window._firebase.currentUser() : null;
+  if(atual && DB.usuarios[idx].uid === atual.uid){
+    toast('Você não pode bloquear seu próprio usuário.', true);
+    return;
+  }
+  DB.usuarios[idx].ativo = DB.usuarios[idx].ativo === false ? true : false;
+  saveDB();
+  renderUsuarios();
+}
+
+function toggleSenhaLogin(){
+  toggleSenhaCampo('auth-senha');
+}
+
+function toggleSenhaCampo(id, btn){
+  const input = document.getElementById(id);
+  if(!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+  if(btn) btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+
 // ══ TOAST ══
 function toast(msg, isError=false){
   const t = document.getElementById('toast');
@@ -1373,6 +1740,12 @@ function toast(msg, isError=false){
 
 // ══ NAVEGAÇÃO ══
 function showPage(name, btn){
+  const area = PAGE_AREA[name] || name;
+  if(!userCan(area)){
+    toast('Você não tem permissão para acessar esta tela.', true);
+    name = 'dashboard';
+    btn = null;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.mnav').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
@@ -1386,6 +1759,7 @@ function showPage(name, btn){
   if(name==='alunos') renderAlunos();
   if(name==='equipes') renderEquipes();
   if(name==='presenca') initPresenca();
+  if(name==='usuarios'){ renderUsuarios(); aplicarPerfilUsuario(); }
 }
 
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
@@ -2791,6 +3165,7 @@ async function iniciarAuthGate(){
     const overlay = document.getElementById('loading-overlay');
 
     if(user){
+      CURRENT_USER = {uid:user.uid,email:user.email};
       document.body.classList.remove('auth-lock');
       if(authScreen) authScreen.style.display = 'none';
 
@@ -2799,6 +3174,8 @@ async function iniciarAuthGate(){
         loadDB();
       }
     }else{
+      CURRENT_USER = null;
+      CURRENT_PROFILE = null;
       document.body.classList.add('auth-lock');
       if(authScreen) authScreen.style.display = 'flex';
       if(overlay) overlay.style.display = 'none';
