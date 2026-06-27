@@ -1,4 +1,4 @@
-// FINAL_REPORT_OVERRIDE_V8
+// FINAL_REPORT_OVERRIDE_V9
 import('./report-mobile-premium.js?v=1');
 
 (function(){
@@ -94,28 +94,34 @@ import('./report-mobile-premium.js?v=1');
     background:transparent !important;
     box-shadow:none !important;
     filter:
-      brightness(1.48)
-      contrast(1.18)
-      saturate(1.22)
-      drop-shadow(0 34px 36px rgba(0,0,0,.58))
-      drop-shadow(0 18px 18px rgba(0,0,0,.36))
-      drop-shadow(0 0 18px rgba(255,255,255,.10))
-      drop-shadow(0 0 32px rgba(126,200,240,.36))
-      drop-shadow(0 0 54px rgba(47,128,237,.22)) !important;
+      brightness(1.58)
+      contrast(1.20)
+      saturate(1.28)
+      drop-shadow(0 38px 38px rgba(0,0,0,.62))
+      drop-shadow(0 18px 20px rgba(0,0,0,.38))
+      drop-shadow(0 0 20px rgba(255,255,255,.22))
+      drop-shadow(0 0 38px rgba(126,200,240,.56))
+      drop-shadow(0 0 72px rgba(47,128,237,.36)) !important;
+    animation:ivLogoBrilliantGlow 3.4s ease-in-out infinite !important;
+    will-change:filter,transform;
   }
 
   body.auth-lock .auth-card h1{
     font-size:38px !important;
     line-height:1.02 !important;
     letter-spacing:.012em !important;
-    background:linear-gradient(90deg,#FFFFFF 0%,#F4FBFF 22%,#CFEFFF 62%,#7EC8F0 100%) !important;
+    background:linear-gradient(100deg,#FFFFFF 0%,#EAF8FF 18%,#7EC8F0 34%,#FFFFFF 48%,#BFEAFF 60%,#7EC8F0 76%,#FFFFFF 100%) !important;
+    background-size:320% 100% !important;
+    background-position:0% 50% !important;
     -webkit-background-clip:text !important;
     background-clip:text !important;
     color:transparent !important;
     filter:
-      drop-shadow(0 22px 22px rgba(0,0,0,.68))
-      drop-shadow(0 10px 10px rgba(0,0,0,.42))
-      drop-shadow(0 0 18px rgba(126,200,240,.18)) !important;
+      drop-shadow(0 24px 24px rgba(0,0,0,.72))
+      drop-shadow(0 12px 12px rgba(0,0,0,.46))
+      drop-shadow(0 0 20px rgba(126,200,240,.24)) !important;
+    animation:ivTextLightSweep 3.2s ease-in-out infinite !important;
+    will-change:background-position,filter;
   }
 
   body.auth-lock .auth-card label{
@@ -137,6 +143,48 @@ import('./report-mobile-premium.js?v=1');
       0 28px 58px rgba(47,128,237,.36),
       0 16px 26px rgba(0,0,0,.30),
       inset 0 1px 0 rgba(255,255,255,.28) !important;
+  }
+
+  @keyframes ivLogoBrilliantGlow{
+    0%,100%{
+      transform:translateY(0) scale(1);
+      filter:
+        brightness(1.52)
+        contrast(1.20)
+        saturate(1.26)
+        drop-shadow(0 38px 38px rgba(0,0,0,.62))
+        drop-shadow(0 18px 20px rgba(0,0,0,.38))
+        drop-shadow(0 0 18px rgba(255,255,255,.18))
+        drop-shadow(0 0 34px rgba(126,200,240,.48))
+        drop-shadow(0 0 66px rgba(47,128,237,.30));
+    }
+    50%{
+      transform:translateY(-2px) scale(1.025);
+      filter:
+        brightness(1.74)
+        contrast(1.24)
+        saturate(1.34)
+        drop-shadow(0 42px 42px rgba(0,0,0,.66))
+        drop-shadow(0 22px 24px rgba(0,0,0,.42))
+        drop-shadow(0 0 28px rgba(255,255,255,.32))
+        drop-shadow(0 0 54px rgba(126,200,240,.72))
+        drop-shadow(0 0 96px rgba(47,128,237,.48));
+    }
+  }
+
+  @keyframes ivTextLightSweep{
+    0%{
+      background-position:0% 50%;
+      filter:drop-shadow(0 24px 24px rgba(0,0,0,.72)) drop-shadow(0 12px 12px rgba(0,0,0,.46)) drop-shadow(0 0 16px rgba(126,200,240,.18));
+    }
+    50%{
+      background-position:100% 50%;
+      filter:drop-shadow(0 26px 26px rgba(0,0,0,.74)) drop-shadow(0 14px 14px rgba(0,0,0,.50)) drop-shadow(0 0 30px rgba(126,200,240,.42));
+    }
+    100%{
+      background-position:0% 50%;
+      filter:drop-shadow(0 24px 24px rgba(0,0,0,.72)) drop-shadow(0 12px 12px rgba(0,0,0,.46)) drop-shadow(0 0 16px rgba(126,200,240,.18));
+    }
   }
 
   @media(max-width:700px){
