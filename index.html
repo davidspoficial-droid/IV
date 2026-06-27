@@ -966,8 +966,112 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
+/* AJUSTE FINAL — PERMISSÕES COMPACTAS */
+.perm-toolbar{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin:14px 0 10px;
+  padding:12px 14px;
+  border:1px solid rgba(126,200,240,.16);
+  border-radius:16px;
+  background:linear-gradient(145deg,rgba(126,200,240,.075),rgba(255,255,255,.012));
+  box-shadow:0 16px 36px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.perm-toolbar label{
+  margin:0;
+  color:#DDF4FF;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.perm-help{
+  margin-top:3px;
+  color:#8FAACB;
+  font-size:11px;
+  line-height:1.3;
+}
+.perm-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.perm-actions .btn{
+  padding:6px 11px;
+  border-radius:999px;
+  font-size:11px;
+  white-space:nowrap;
+}
+.perm-count{
+  margin:0 0 8px;
+  color:#BFEAFF;
+  font-size:11px;
+  font-weight:800;
+  text-align:right;
+}
+.perm-section{
+  display:grid!important;
+  grid-template-columns:128px 1fr;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px!important;
+  margin-top:8px!important;
+  border-radius:16px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.030),rgba(255,255,255,.008))!important;
+}
+.perm-section-title{
+  margin:0!important;
+  font-size:11px!important;
+  letter-spacing:.08em!important;
+  line-height:1.25;
+}
+.perm-grid{
+  display:flex!important;
+  flex-wrap:wrap;
+  gap:7px!important;
+  margin:0!important;
+}
+.perm-card{
+  min-height:0;
+  padding:7px 10px!important;
+  border-radius:999px!important;
+  gap:7px!important;
+  font-size:12px!important;
+  line-height:1.1;
+  cursor:pointer;
+  transition:transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.perm-card:hover{
+  transform:translateY(-1px);
+  border-color:rgba(126,200,240,.42);
+  box-shadow:0 10px 24px rgba(0,0,0,.20);
+}
+.perm-card:has(input:checked){
+  background:linear-gradient(135deg,rgba(47,128,237,.24),rgba(34,211,238,.13))!important;
+  border-color:rgba(126,200,240,.48)!important;
+  color:#FFFFFF!important;
+}
+.perm-card input{
+  flex:0 0 auto;
+  margin:0;
+}
+.perm-card span{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+}
+.perm-card small{
+  display:none!important;
+}
+@media(max-width:760px){
+  .perm-toolbar{align-items:stretch;flex-direction:column;}
+  .perm-actions{justify-content:flex-start;}
+  .perm-count{text-align:left;}
+  .perm-section{grid-template-columns:1fr!important;align-items:start;}
+  .perm-card span{white-space:normal;}
+}
 
 </style>
 </head>
@@ -1174,21 +1278,6 @@ body.auth-lock #loading-overlay,
   <div class="stitle">🔐 Usuários e Permissões</div>
 
   <div class="card" style="margin-bottom:20px">
-    <div class="card-title">Permissões do Administrador</div>
-    <p style="color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:8px">
-      O perfil <strong style="color:#fff">Administrador</strong> tem liberação total dentro do sistema. Essas são as permissões completas que podem ser concedidas ou bloqueadas para novos usuários:
-    </p>
-    <div class="admin-perm-list" id="admin-perm-list">
-      <div class="admin-perm-item"><strong>Dashboard</strong>Visualizar painel, indicadores e resumo geral.</div>
-      <div class="admin-perm-item"><strong>Alunos</strong>Acessar lista, cadastrar, editar, importar, alterar situação e excluir alunos.</div>
-      <div class="admin-perm-item"><strong>Equipes</strong>Acessar, cadastrar, editar e excluir equipes.</div>
-      <div class="admin-perm-item"><strong>Presença</strong>Acessar tela de presença e lançar/alterar presenças.</div>
-      <div class="admin-perm-item"><strong>Relatórios</strong>Acessar, gerar e exportar relatórios.</div>
-      <div class="admin-perm-item"><strong>Usuários</strong>Visualizar usuários, cadastrar novos acessos, ativar/bloquear usuários e definir permissões.</div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:20px">
     <div class="card-title">Cadastrar novo usuário</div>
     <div class="form-row">
       <div>
@@ -1221,54 +1310,64 @@ body.auth-lock #loading-overlay,
       </div>
     </div>
 
-    <label>Conceder permissões ao novo usuário</label>
+    <div class="perm-toolbar">
+      <div>
+        <label>Permissões do usuário</label>
+        <div class="perm-help">Selecione apenas o que esse acesso poderá visualizar, cadastrar, editar, excluir ou gerar.</div>
+      </div>
+      <div class="perm-actions">
+        <button type="button" class="btn btn-ghost" onclick="selecionarTodasPermissoesUsuario()">Selecionar todas</button>
+        <button type="button" class="btn btn-ghost" onclick="limparPermissoesUsuario()">Limpar seleção</button>
+      </div>
+    </div>
+    <div class="perm-count" id="perm-count">0 permissões selecionadas</div>
     <div class="perm-section">
       <div class="perm-section-title">Dashboard</div>
       <div class="perm-grid">
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="dashboard_view" checked> <span>Visualizar Dashboard<small>Permite acessar indicadores e resumo geral.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="dashboard_view" checked> <span>Dashboard<small>Permite acessar indicadores e resumo geral.</small></span></label>
       </div>
     </div>
     <div class="perm-section">
       <div class="perm-section-title">Alunos</div>
       <div class="perm-grid">
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_view" checked> <span>Visualizar alunos<small>Acessar a tela e consultar lista de alunos.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_manage" checked> <span>Cadastrar/editar alunos<small>Criar, editar, importar, avançar módulo e alterar situação.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_delete" checked> <span>Excluir alunos<small>Remover alunos individualmente ou em massa.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_view" checked> <span>Ver alunos<small>Acessar a tela e consultar lista de alunos.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_manage" checked> <span>Cadastrar/editar<small>Criar, editar, importar, avançar módulo e alterar situação.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_delete" checked> <span>Excluir<small>Remover alunos individualmente ou em massa.</small></span></label>
       </div>
     </div>
     <div class="perm-section">
       <div class="perm-section-title">Equipes</div>
       <div class="perm-grid">
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_view" checked> <span>Visualizar equipes<small>Acessar a tela de equipes.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_manage" checked> <span>Cadastrar/editar equipes<small>Criar e alterar equipes.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_delete" checked> <span>Excluir equipes<small>Remover equipes do sistema.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_view" checked> <span>Ver equipes<small>Acessar a tela de equipes.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_manage" checked> <span>Cadastrar/editar<small>Criar e alterar equipes.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_delete" checked> <span>Excluir<small>Remover equipes do sistema.</small></span></label>
       </div>
     </div>
     <div class="perm-section">
       <div class="perm-section-title">Presença</div>
       <div class="perm-grid">
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca_view" checked> <span>Visualizar presença<small>Acessar a tela de presença.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca_manage" checked> <span>Lançar/alterar presença<small>Marcar e alterar presenças dos alunos.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca_view" checked> <span>Ver presença<small>Acessar a tela de presença.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca_manage" checked> <span>Lançar/alterar<small>Marcar e alterar presenças dos alunos.</small></span></label>
       </div>
     </div>
     <div class="perm-section">
       <div class="perm-section-title">Relatórios</div>
       <div class="perm-grid">
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios_view" checked> <span>Visualizar relatórios<small>Acessar tela e histórico de relatórios.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios_generate" checked> <span>Gerar/exportar relatórios<small>Criar relatórios e exportar arquivos.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios_view" checked> <span>Ver relatórios<small>Acessar tela e histórico de relatórios.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios_generate" checked> <span>Gerar/exportar<small>Criar relatórios e exportar arquivos.</small></span></label>
       </div>
     </div>
     <div class="perm-section">
       <div class="perm-section-title">Usuários e acessos</div>
       <div class="perm-grid">
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_view" checked> <span>Visualizar usuários<small>Ver a lista de usuários cadastrados.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_create" checked> <span>Cadastrar usuários<small>Criar novos acessos com e-mail e senha.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_status" checked> <span>Ativar/bloquear usuários<small>Controlar se um acesso fica ativo ou inativo.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_view" checked> <span>Ver usuários<small>Ver a lista de usuários cadastrados.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_create" checked> <span>Cadastrar<small>Criar novos acessos com e-mail e senha.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_status" checked> <span>Ativar/bloquear<small>Controlar se um acesso fica ativo ou inativo.</small></span></label>
       </div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
-      <button class="btn btn-ghost" onclick="limparFormUsuario()">Limpar</button>
+      <button class="btn btn-ghost" onclick="limparFormUsuario()">Limpar formulário</button>
       <button class="btn btn-blue" onclick="cadastrarUsuarioSistema()">Cadastrar usuário</button>
     </div>
   </div>
@@ -1750,10 +1849,40 @@ function permissoesSelecionadas(){
   return obj;
 }
 
+function atualizarResumoPermissoesUsuario(){
+  const checks = [...document.querySelectorAll('.usr-perm')];
+  const marcadas = checks.filter(chk=>chk.checked).length;
+  const el = document.getElementById('perm-count');
+  if(el) el.textContent = `${marcadas} de ${checks.length} permissões selecionadas`;
+}
+
 function setPermissoesForm(perms){
   perms = perms || {};
   document.querySelectorAll('.usr-perm').forEach(chk=>chk.checked = !!perms[chk.value]);
+  atualizarResumoPermissoesUsuario();
 }
+
+function selecionarTodasPermissoesUsuario(){
+  document.querySelectorAll('.usr-perm').forEach(chk=>chk.checked = true);
+  const perfil = document.getElementById('usr-perfil');
+  if(perfil) perfil.value = 'personalizado';
+  atualizarResumoPermissoesUsuario();
+}
+
+function limparPermissoesUsuario(){
+  document.querySelectorAll('.usr-perm').forEach(chk=>chk.checked = false);
+  const perfil = document.getElementById('usr-perfil');
+  if(perfil) perfil.value = 'personalizado';
+  atualizarResumoPermissoesUsuario();
+}
+
+document.addEventListener('change', function(e){
+  if(e.target && e.target.classList && e.target.classList.contains('usr-perm')){
+    const perfil = document.getElementById('usr-perfil');
+    if(perfil) perfil.value = 'personalizado';
+    atualizarResumoPermissoesUsuario();
+  }
+});
 
 function aplicarPerfilUsuario(){
   const perfil = document.getElementById('usr-perfil').value;
