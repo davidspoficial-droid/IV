@@ -1,8 +1,20 @@
-// FINAL_REPORT_OVERRIDE_V7
+// FINAL_REPORT_OVERRIDE_V8
 import('./report-mobile-premium.js?v=1');
 
 (function(){
   const css = `
+  body.auth-lock #loading-overlay,
+  body.auth-lock #login,
+  body.auth-lock #shell,
+  body.auth-lock iframe,
+  body.auth-lock .login,
+  body.auth-lock .top{
+    display:none !important;
+    opacity:0 !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+  }
+
   body.auth-lock #auth-screen{
     background:
       radial-gradient(circle at 18% 8%, rgba(47,128,237,.34), transparent 34%),
@@ -11,14 +23,8 @@ import('./report-mobile-premium.js?v=1');
       linear-gradient(145deg,#020611 0%,#07111F 48%,#030712 100%) !important;
   }
 
-  body.auth-lock #auth-screen::before{
-    opacity:.42 !important;
-  }
-
-  body.auth-lock #auth-screen::after{
-    opacity:.85 !important;
-    filter:blur(26px) !important;
-  }
+  body.auth-lock #auth-screen::before{ opacity:.42 !important; }
+  body.auth-lock #auth-screen::after{ opacity:.85 !important; filter:blur(26px) !important; }
 
   body.auth-lock .auth-card{
     width:min(500px,calc(100vw - 36px)) !important;
@@ -140,6 +146,28 @@ import('./report-mobile-premium.js?v=1');
   }
   `;
 
+  function cleanupOldLoginLayers(){
+    try { localStorage.removeItem('iv_shell_session'); } catch(e) {}
+
+    ['login','shell'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el && !el.closest('#auth-screen')) el.remove();
+    });
+
+    document.querySelectorAll('iframe').forEach(frame => {
+      const src = frame.getAttribute('src') || '';
+      if(src.includes('index.html') || src.includes('app.html')) frame.remove();
+    });
+
+    const overlay = document.getElementById('loading-overlay');
+    if(document.body.classList.contains('auth-lock') && overlay){
+      overlay.classList.add('hide');
+      overlay.style.display = 'none';
+      overlay.style.visibility = 'hidden';
+      overlay.style.opacity = '0';
+    }
+  }
+
   function applyLoginPremiumStyle(){
     let style = document.getElementById('iv-login-premium-depth-style');
     if(!style){
@@ -148,6 +176,7 @@ import('./report-mobile-premium.js?v=1');
       document.head.appendChild(style);
     }
     style.textContent = css;
+    cleanupOldLoginLayers();
   }
 
   if(document.readyState === 'loading'){
@@ -155,4 +184,6 @@ import('./report-mobile-premium.js?v=1');
   } else {
     applyLoginPremiumStyle();
   }
+
+  setInterval(cleanupOldLoginLayers, 800);
 })();
