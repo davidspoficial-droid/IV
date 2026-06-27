@@ -704,8 +704,125 @@ body.auth-lock .auth-logout{display:none!important;}
 }
 
 
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
+/* AJUSTE FINAL — LOGIN PREMIUM SEM SEGUNDA TELA */
+body.auth-lock #loading-overlay,
+#loading-overlay{
+  display:none!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
+#auth-screen{
+  z-index:999999!important;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(47,128,237,.38), transparent 34%),
+    radial-gradient(circle at 84% 14%, rgba(34,211,238,.24), transparent 32%),
+    radial-gradient(circle at 50% 104%, rgba(126,200,240,.15), transparent 36%),
+    linear-gradient(145deg,#020611 0%,#07111F 48%,#030712 100%)!important;
+}
+
+#auth-screen .auth-card{
+  width:min(500px,calc(100vw - 36px))!important;
+  border-radius:34px!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.115),rgba(255,255,255,.024) 42%,rgba(255,255,255,.012) 100%),
+    linear-gradient(180deg,rgba(10,23,43,.98),rgba(5,13,26,.99))!important;
+  border:1px solid rgba(126,200,240,.28)!important;
+  box-shadow:
+    0 64px 160px rgba(0,0,0,.76),
+    0 30px 76px rgba(0,0,0,.52),
+    0 0 0 1px rgba(255,255,255,.025),
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 -1px 0 rgba(126,200,240,.09)!important;
+  overflow:visible!important;
+}
+
+#auth-screen .auth-brand{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  gap:18px!important;
+  margin:0 0 32px!important;
+}
+
+#auth-screen .auth-logo-shell{
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+
+#auth-screen .auth-logo{
+  width:118px!important;
+  max-width:118px!important;
+  height:auto!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  filter:
+    brightness(1.60)
+    contrast(1.22)
+    saturate(1.30)
+    drop-shadow(0 38px 38px rgba(0,0,0,.64))
+    drop-shadow(0 18px 20px rgba(0,0,0,.40))
+    drop-shadow(0 0 24px rgba(255,255,255,.30))
+    drop-shadow(0 0 48px rgba(126,200,240,.74))
+    drop-shadow(0 0 92px rgba(47,128,237,.50))!important;
+  animation:ivLogoGlowFinal 3.4s ease-in-out infinite!important;
+}
+
+#auth-screen .auth-card h1{
+  font-size:38px!important;
+  line-height:1.02!important;
+  letter-spacing:.012em!important;
+  background:linear-gradient(100deg,#FFFFFF 0%,#EAF8FF 18%,#7EC8F0 34%,#FFFFFF 48%,#BFEAFF 60%,#7EC8F0 76%,#FFFFFF 100%)!important;
+  background-size:320% 100%!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  color:transparent!important;
+  filter:
+    drop-shadow(0 24px 24px rgba(0,0,0,.74))
+    drop-shadow(0 12px 12px rgba(0,0,0,.50))
+    drop-shadow(0 0 26px rgba(126,200,240,.42))!important;
+  animation:ivTextSweepFinal 3.2s ease-in-out infinite!important;
+}
+
+@keyframes ivLogoGlowFinal{
+  0%,100%{
+    transform:translateY(0) scale(1);
+  }
+  50%{
+    transform:translateY(-2px) scale(1.025);
+    filter:
+      brightness(1.84)
+      contrast(1.25)
+      saturate(1.38)
+      drop-shadow(0 42px 42px rgba(0,0,0,.66))
+      drop-shadow(0 22px 24px rgba(0,0,0,.42))
+      drop-shadow(0 0 36px rgba(255,255,255,.38))
+      drop-shadow(0 0 66px rgba(126,200,240,.86))
+      drop-shadow(0 0 112px rgba(47,128,237,.60))!important;
+  }
+}
+
+@keyframes ivTextSweepFinal{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+@media(max-width:700px){
+  #auth-screen .auth-logo{width:96px!important;max-width:96px!important;}
+  #auth-screen .auth-card h1{font-size:30px!important;}
+}
 
 </style>
 </head>
@@ -715,9 +832,7 @@ body.auth-lock .auth-logout{display:none!important;}
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-brand">
-      <div class="auth-logo-shell">
-        <img src="./IV.png" class="auth-logo" alt="Instituto de Vencedores">
-      </div>
+      <img src="./IV.png" class="auth-logo" alt="Instituto de Vencedores">
       <h1>Instituto de Vencedores</h1>
     </div>
 
@@ -732,14 +847,6 @@ body.auth-lock .auth-logout{display:none!important;}
   </div>
 </div>
 
-
-<!-- LOADING OVERLAY -->
-<div id="loading-overlay">
-  <img class="loading-logo" src="./IV.png" alt="Logo Instituto de Vencedores">
-  <div class="spinner"></div>
-  <div class="loading-txt">Instituto de <span style="color:var(--blue-l)">Vencedores</span></div>
-  <div class="loading-sub">Carregando dados...</div>
-</div>
 
 <!-- SYNC BADGE -->
 <div id="sync-badge">
@@ -2697,10 +2804,6 @@ async function iniciarAuthGate(){
 
 iniciarAuthGate();
 
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
-}
-
 document.getElementById('pres-modulo').addEventListener('change',()=>{
   refreshEquipeSelects('pres-equipe-filtro');
 });
@@ -2710,6 +2813,5 @@ document.getElementById('pres-modulo').addEventListener('change',()=>{
 <script src="./report-layout.js?v=1"></script>
 <script src="./report-history-list.js?v=1"></script>
 <script src="./report-enhanced-filters.js?v=1"></script>
-<script src="./report-final-adjustments.js?v=2"></script>
 </body>
 </html>
