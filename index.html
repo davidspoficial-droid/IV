@@ -1284,20 +1284,111 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* AÇÕES DE USUÁRIO */
+
+/* BOTÕES DE AÇÃO DO USUÁRIO COM ÍCONES PREMIUM */
 .user-actions{
   display:flex;
-  gap:6px;
+  gap:7px;
   align-items:center;
   justify-content:center;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
 }
 
-.user-actions .btn{
-  padding:5px 9px;
+.user-icon-btn{
+  width:34px;
+  height:34px;
+  padding:0;
   border-radius:999px;
-  font-size:11px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  border:1px solid rgba(126,200,240,.22);
+  background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.012));
+  color:#DFF6FF;
+  box-shadow:
+    0 12px 24px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease;
 }
+
+.user-icon-btn svg{
+  width:17px;
+  height:17px;
+  display:block;
+  filter:drop-shadow(0 0 8px rgba(126,200,240,.36));
+}
+
+.user-icon-btn:hover{
+  transform:translateY(-1px);
+  color:#FFFFFF;
+  border-color:rgba(126,200,240,.52);
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.30),
+    0 0 22px rgba(126,200,240,.22),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+.user-icon-edit{
+  color:#BFEAFF;
+}
+
+.user-icon-edit:hover{
+  background:linear-gradient(145deg,rgba(126,200,240,.18),rgba(47,128,237,.10));
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.30),
+    0 0 24px rgba(126,200,240,.34),
+    inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.user-icon-lock{
+  color:#FFD6A5;
+  border-color:rgba(245,158,11,.28);
+}
+
+.user-icon-lock:hover{
+  background:linear-gradient(145deg,rgba(245,158,11,.20),rgba(160,92,8,.12));
+  border-color:rgba(245,158,11,.58);
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.30),
+    0 0 24px rgba(245,158,11,.30),
+    inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.user-icon-unlock{
+  color:#B9FFD2;
+  border-color:rgba(62,201,122,.30);
+}
+
+.user-icon-unlock:hover{
+  background:linear-gradient(145deg,rgba(62,201,122,.22),rgba(20,120,64,.13));
+  border-color:rgba(62,201,122,.62);
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.30),
+    0 0 24px rgba(62,201,122,.32),
+    inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+.user-icon-delete{
+  color:#FFE1E1;
+  border-color:rgba(224,85,85,.34);
+}
+
+.user-icon-delete:hover{
+  background:linear-gradient(145deg,rgba(224,85,85,.24),rgba(120,18,32,.15));
+  border-color:rgba(255,112,112,.68);
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.30),
+    0 0 26px rgba(224,85,85,.36),
+    inset 0 1px 0 rgba(255,255,255,.13);
+}
+
+@media(max-width:760px){
+  .user-actions{
+    flex-wrap:wrap;
+  }
+}
+
 
 #usr-email[readonly],
 #usr-senha:disabled{
@@ -1307,8 +1398,76 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
+/* RESUMO COMPACTO DAS PERMISSÕES NA LISTA DE USUÁRIOS */
+.td-perm-compact{
+  min-width:170px;
+}
+
+.user-perm-compact{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  max-width:220px;
+}
+
+.perm-total{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:24px;
+  padding:0 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+  color:#DFF6FF;
+  background:linear-gradient(135deg,rgba(126,200,240,.16),rgba(47,128,237,.08));
+  border:1px solid rgba(126,200,240,.28);
+  box-shadow:0 10px 20px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.08);
+  white-space:nowrap;
+}
+
+.perm-total-all{
+  color:#B9FFD2;
+  background:linear-gradient(135deg,rgba(62,201,122,.18),rgba(20,120,64,.10));
+  border-color:rgba(62,201,122,.34);
+}
+
+.perm-mini-list{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.perm-mini-chip,
+.perm-mini-more{
+  display:inline-flex;
+  align-items:center;
+  height:22px;
+  padding:0 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+  color:#9FB9D7;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(126,200,240,.12);
+  white-space:nowrap;
+}
+
+.perm-mini-more{
+  color:#BFEAFF;
+  border-color:rgba(126,200,240,.26);
+}
+
+@media(max-width:760px){
+  .td-perm-compact{
+    min-width:0;
+  }
+  .user-perm-compact{
+    max-width:none;
+  }
+}
 
 </style>
 </head>
@@ -1668,7 +1827,7 @@ body.auth-lock #loading-overlay,
             <th>Usuário</th>
             <th>E-mail vinculado</th>
             <th>Perfil</th>
-            <th>Permissões</th>
+            <th style="width:190px">Permissões</th>
             <th style="width:120px;text-align:center">Status</th>
             <th style="width:120px;text-align:center">Ações</th>
           </tr>
@@ -2302,6 +2461,89 @@ async function cadastrarUsuarioSistema(){
   }
 }
 
+
+function svgIconEditarUsuario(){
+  return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M5 19h4.15L18.2 9.95c.62-.62.62-1.62 0-2.24L16.3 5.8c-.62-.62-1.62-.62-2.24 0L5 14.85V19Z" stroke="currentColor" stroke-width="1.85" stroke-linejoin="round"/>
+    <path d="M12.95 6.9l4.15 4.15" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+    <path d="M4.75 20.25h14.5" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function svgIconBloquearUsuario(){
+  return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M7.25 10.25V8.4c0-2.75 2.05-4.9 4.75-4.9s4.75 2.15 4.75 4.9v1.85" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+    <path d="M6.6 10.25h10.8c1.05 0 1.9.85 1.9 1.9v6.2c0 1.05-.85 1.9-1.9 1.9H6.6c-1.05 0-1.9-.85-1.9-1.9v-6.2c0-1.05.85-1.9 1.9-1.9Z" stroke="currentColor" stroke-width="1.85"/>
+    <path d="M12 14.35v2.25" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function svgIconAtivarUsuario(){
+  return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M7.25 10.25V8.15c0-2.62 1.95-4.65 4.55-4.65 1.78 0 3.22.92 4 2.32" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+    <path d="M6.6 10.25h10.8c1.05 0 1.9.85 1.9 1.9v6.2c0 1.05-.85 1.9-1.9 1.9H6.6c-1.05 0-1.9-.85-1.9-1.9v-6.2c0-1.05.85-1.9 1.9-1.9Z" stroke="currentColor" stroke-width="1.85"/>
+    <path d="M9.35 15.45l1.65 1.65 3.85-4.2" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function svgIconExcluirUsuario(){
+  return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M5.25 7.25h13.5" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+    <path d="M9.25 7.25V5.9c0-.72.58-1.3 1.3-1.3h2.9c.72 0 1.3.58 1.3 1.3v1.35" stroke="currentColor" stroke-width="1.85"/>
+    <path d="M8.05 10.25l.55 7.25c.08 1.08.98 1.9 2.06 1.9h2.68c1.08 0 1.98-.82 2.06-1.9l.55-7.25" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+    <path d="M10.55 11.85v4.35M13.45 11.85v4.35" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function botaoIconeUsuario(tipo, idx, ativo){
+  if(tipo === 'editar'){
+    return `<button class="user-icon-btn user-icon-edit" onclick="editarUsuarioSistema(${idx})" title="Editar usuário" aria-label="Editar usuário">${svgIconEditarUsuario()}</button>`;
+  }
+
+  if(tipo === 'status'){
+    const acao = ativo ? 'Bloquear usuário' : 'Ativar usuário';
+    const classe = ativo ? 'user-icon-lock' : 'user-icon-unlock';
+    const icone = ativo ? svgIconBloquearUsuario() : svgIconAtivarUsuario();
+    return `<button class="user-icon-btn ${classe}" onclick="alternarUsuarioAtivo(${idx})" title="${acao}" aria-label="${acao}">${icone}</button>`;
+  }
+
+  return `<button class="user-icon-btn user-icon-delete" onclick="excluirUsuarioSistema(${idx})" title="Excluir usuário" aria-label="Excluir usuário">${svgIconExcluirUsuario()}</button>`;
+}
+
+
+
+function resumoPermissoesUsuario(u){
+  const permissoes = u.permissoes || {};
+  const ativas = Object.keys(PERMISSOES_LABELS).filter(k => !!permissoes[k]);
+  const total = Object.keys(PERMISSOES_LABELS).length;
+  const qtd = ativas.length;
+
+  const grupos = [
+    ['Dashboard', ['dashboard_view']],
+    ['Alunos', ['alunos_view','alunos_manage','alunos_delete']],
+    ['Equipes', ['equipes_view','equipes_manage','equipes_delete']],
+    ['Presença', ['presenca_view','presenca_manage']],
+    ['Relatórios', ['relatorios_view','relatorios_generate']],
+    ['Usuários', ['usuarios_view','usuarios_create','usuarios_edit','usuarios_status','usuarios_delete']]
+  ].filter(([_, keys]) => keys.some(k => permissoes[k]));
+
+  const title = ativas.map(k => PERMISSOES_LABELS[k] || k).join(' | ') || 'Sem permissões liberadas';
+
+  if(qtd === total){
+    return `<div class="user-perm-compact" title="${title}">
+      <span class="perm-total perm-total-all">Todas</span>
+    </div>`;
+  }
+
+  const chips = grupos.slice(0, 3).map(([nome]) => `<span class="perm-mini-chip">${nome}</span>`).join('');
+  const extra = grupos.length > 3 ? `<span class="perm-mini-more">+${grupos.length - 3}</span>` : '';
+
+  return `<div class="user-perm-compact" title="${title}">
+    <span class="perm-total">${qtd}/${total}</span>
+    <span class="perm-mini-list">${chips}${extra}</span>
+  </div>`;
+}
+
 function renderUsuarios(){
   const tb = document.getElementById('tb-usuarios');
   if(!tb) return;
@@ -2313,20 +2555,20 @@ function renderUsuarios(){
   }
 
   tb.innerHTML = DB.usuarios.map((u,idx)=>{
-    const perms = Object.entries(u.permissoes||{}).filter(([k,v])=>v).map(([k])=>PERMISSOES_LABELS[k]||k).join('<br>');
+    const perms = resumoPermissoesUsuario(u);
     const ativo = u.ativo !== false;
     return `<tr>
       <td><strong>${u.nome||'—'}</strong></td>
       <td><span class="user-pill">${u.username||'—'}</span></td>
       <td>${u.email||'—'}</td>
       <td><span class="user-pill">${u.perfil||'operador'}</span></td>
-      <td style="color:var(--muted);font-size:12px">${perms||'—'}</td>
+      <td class="td-perm-compact">${perms||'—'}</td>
       <td style="text-align:center">${ativo?'<span class="badge badge-g">Ativo</span>':'<span class="badge badge-r">Inativo</span>'}</td>
       <td style="text-align:center">
         <div class="user-actions">
-          <button class="btn btn-xs btn-ghost" onclick="editarUsuarioSistema(${idx})">Editar</button>
-          <button class="btn btn-xs btn-ghost" onclick="alternarUsuarioAtivo(${idx})">${ativo?'Bloquear':'Ativar'}</button>
-          <button class="btn btn-xs btn-red" onclick="excluirUsuarioSistema(${idx})">Excluir</button>
+          ${botaoIconeUsuario('editar', idx, ativo)}
+          ${botaoIconeUsuario('status', idx, ativo)}
+          ${botaoIconeUsuario('excluir', idx, ativo)}
         </div>
       </td>
     </tr>`;
