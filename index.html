@@ -498,11 +498,12 @@ body.auth-lock #sync-badge {
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:22px;
+  padding:28px;
   background:
-    radial-gradient(circle at 20% 0%, rgba(47,128,237,.28), transparent 34%),
-    radial-gradient(circle at 85% 10%, rgba(34,211,238,.16), transparent 32%),
-    linear-gradient(145deg,#020611,#07111F 55%,#030712);
+    radial-gradient(circle at 16% 8%, rgba(75,141,255,.30), transparent 32%),
+    radial-gradient(circle at 82% 12%, rgba(34,211,238,.18), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(155,89,182,.10), transparent 36%),
+    linear-gradient(145deg,#020611 0%,#07111F 55%,#030712 100%);
 }
 #auth-screen::before{
   content:"";
@@ -510,88 +511,156 @@ body.auth-lock #sync-badge {
   inset:0;
   pointer-events:none;
   background-image:
-    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.026) 1px, transparent 1px);
   background-size:42px 42px;
-  opacity:.55;
+  opacity:.50;
+}
+#auth-screen::after{
+  content:"";
+  position:absolute;
+  width:min(720px,82vw);
+  height:min(720px,82vw);
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(126,200,240,.12), transparent 62%);
+  filter:blur(18px);
+  opacity:.9;
+  pointer-events:none;
 }
 .auth-card{
   position:relative;
-  width:min(440px,100%);
-  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018)),rgba(7,17,31,.94);
+  width:min(480px,100%);
+  padding:38px 34px 34px;
+  border-radius:32px;
   border:1px solid rgba(126,200,240,.24);
-  border-radius:28px;
-  padding:32px;
-  box-shadow:0 34px 100px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.02) 28%,rgba(255,255,255,.015) 100%),
+    linear-gradient(180deg,rgba(11,24,44,.96),rgba(7,17,31,.96));
+  box-shadow:
+    0 42px 110px rgba(0,0,0,.58),
+    0 10px 28px rgba(9,22,47,.42),
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 -1px 0 rgba(126,200,240,.08);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  overflow:hidden;
+}
+.auth-card::before{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  top:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.56),transparent);
+  opacity:.9;
+}
+.auth-card::after{
+  content:"";
+  position:absolute;
+  inset:auto -80px -110px auto;
+  width:240px;
+  height:240px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(126,200,240,.16), transparent 68%);
+  filter:blur(12px);
+  pointer-events:none;
 }
 .auth-brand{
   display:flex;
+  flex-direction:column;
   align-items:center;
+  justify-content:center;
   gap:16px;
-  margin:0 0 26px;
+  text-align:center;
+  margin:0 0 28px;
+}
+.auth-logo-shell{
+  width:112px;
+  height:112px;
+  border-radius:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.04)),
+    radial-gradient(circle at 30% 25%, rgba(126,200,240,.20), transparent 58%),
+    rgba(6,18,34,.92);
+  border:1px solid rgba(126,200,240,.18);
+  box-shadow:
+    0 30px 65px rgba(0,0,0,.42),
+    0 0 34px rgba(126,200,240,.14),
+    inset 0 1px 0 rgba(255,255,255,.10);
 }
 .auth-logo{
-  width:76px;
-  max-width:76px;
+  width:78px;
+  max-width:78px;
   height:auto;
   display:block;
-  flex:0 0 auto;
-  filter:brightness(1.38) contrast(1.18) saturate(1.20) drop-shadow(0 14px 24px rgba(0,0,0,.48)) drop-shadow(0 0 22px rgba(126,200,240,.22));
+  filter:brightness(1.44) contrast(1.16) saturate(1.22) drop-shadow(0 18px 24px rgba(0,0,0,.34)) drop-shadow(0 0 28px rgba(126,200,240,.26));
 }
 .auth-card h1{
   margin:0;
   font-family:'Playfair Display',serif;
-  font-size:31px;
-  line-height:1.04;
-  color:#F4F8FF;
-  background:linear-gradient(90deg,#fff,#DDF4FF 62%,#7EC8F0);
+  font-size:34px;
+  line-height:1.02;
+  letter-spacing:.01em;
+  background:linear-gradient(90deg,#FFFFFF 0%,#EDF8FF 26%,#BFE9FF 68%,#7EC8F0 100%);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
+  text-shadow:0 10px 30px rgba(0,0,0,.22);
 }
 .auth-card label{
   display:block;
-  margin:12px 0 6px;
-  color:#AFC7E6;
+  margin:13px 0 7px;
+  color:#B7CEE9;
   font-size:12px;
   font-weight:800;
-  letter-spacing:.04em;
+  letter-spacing:.08em;
+  text-transform:uppercase;
 }
 .auth-card input{
   width:100%;
-  padding:13px 15px;
-  border-radius:14px;
-  border:1px solid rgba(126,200,240,.20);
-  background:rgba(5,14,28,.92);
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid rgba(126,200,240,.18);
+  background:linear-gradient(180deg, rgba(5,14,28,.96), rgba(7,19,34,.96));
   color:#F4F8FF;
   outline:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 20px rgba(0,0,0,.14);
 }
 .auth-card input:focus{
   border-color:rgba(126,200,240,.62);
-  box-shadow:0 0 0 4px rgba(47,128,237,.14);
+  box-shadow:0 0 0 4px rgba(47,128,237,.14), inset 0 1px 0 rgba(255,255,255,.05), 0 14px 26px rgba(0,0,0,.18);
 }
 .auth-card button{
   width:100%;
-  margin-top:18px;
-  padding:13px 16px;
+  margin-top:20px;
+  padding:14px 18px;
   border:0;
   border-radius:999px;
-  background:linear-gradient(135deg,#2F80ED,#22D3EE);
+  background:linear-gradient(135deg,#55A7FF 0%,#2F80ED 42%,#22D3EE 100%);
   color:#fff;
   font-weight:900;
+  letter-spacing:.03em;
   cursor:pointer;
   font-family:'DM Sans',sans-serif;
-  box-shadow:0 14px 34px rgba(47,128,237,.28);
+  box-shadow:0 18px 42px rgba(47,128,237,.30), inset 0 1px 0 rgba(255,255,255,.24);
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
-.auth-card button:hover{transform:translateY(-1px);}
+.auth-card button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 22px 52px rgba(47,128,237,.36), inset 0 1px 0 rgba(255,255,255,.26);
+  filter:saturate(1.05);
+}
 #auth-error{
-  margin-top:12px;
+  margin-top:13px;
   min-height:17px;
-  color:#F08080;
+  color:#F6A2A2;
   font-size:12px;
   font-weight:700;
+  text-align:center;
 }
 .auth-logout{
   margin-left:auto;
@@ -634,10 +703,6 @@ body.auth-lock .auth-logout{display:none!important;}
   .auth-logout{width:100%;justify-content:center;margin-left:0;}
 }
 
-
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
-
 </style>
 </head>
 <body class="auth-lock">
@@ -646,7 +711,9 @@ body.auth-lock .auth-logout{display:none!important;}
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-brand">
-      <img src="./IV.png" class="auth-logo" alt="Instituto de Vencedores">
+      <div class="auth-logo-shell">
+        <img src="./IV.png" class="auth-logo" alt="Instituto de Vencedores">
+      </div>
       <h1>Instituto de Vencedores</h1>
     </div>
 
