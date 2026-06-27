@@ -839,36 +839,53 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* LOGIN — OLHO DA SENHA */
+/* LOGIN — OLHO DA SENHA SEM MOLDURA */
 .login-password-wrap{
   position:relative;
   width:100%;
 }
 .login-password-wrap input{
-  padding-right:52px!important;
+  padding-right:48px!important;
 }
 .login-password-eye{
   position:absolute!important;
-  right:9px;
+  right:10px;
   top:50%;
   transform:translateY(-50%);
-  width:36px!important;
-  height:36px!important;
+  width:34px!important;
+  height:34px!important;
   margin:0!important;
   padding:0!important;
-  border:1px solid rgba(126,200,240,.24)!important;
-  border-radius:12px!important;
-  background:rgba(126,200,240,.08)!important;
-  color:#DDF4FF!important;
-  box-shadow:0 10px 22px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08)!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#E8F7FF!important;
+  box-shadow:none!important;
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
   cursor:pointer;
+  font-size:18px!important;
+  line-height:1!important;
+  filter:
+    drop-shadow(0 10px 13px rgba(0,0,0,.55))
+    drop-shadow(0 0 10px rgba(126,200,240,.52))
+    drop-shadow(0 0 22px rgba(47,128,237,.32));
+  transition:transform .18s ease, filter .18s ease, color .18s ease;
 }
 .login-password-eye:hover{
-  background:rgba(126,200,240,.16)!important;
-  color:#fff!important;
+  background:transparent!important;
+  color:#FFFFFF!important;
+  transform:translateY(-50%) scale(1.08);
+  filter:
+    drop-shadow(0 12px 16px rgba(0,0,0,.62))
+    drop-shadow(0 0 16px rgba(255,255,255,.28))
+    drop-shadow(0 0 28px rgba(126,200,240,.72))
+    drop-shadow(0 0 42px rgba(47,128,237,.44));
+}
+.login-password-eye:focus,
+.login-password-eye:focus-visible{
+  outline:none!important;
 }
 
 /* USUÁRIOS */
@@ -908,8 +925,45 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
+.admin-perm-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.admin-perm-item{
+  background:linear-gradient(145deg,rgba(126,200,240,.10),rgba(255,255,255,.015));
+  border:1px solid rgba(126,200,240,.18);
+  border-radius:14px;
+  padding:11px 12px;
+  color:#DDF4FF;
+  font-size:12.5px;
+  line-height:1.35;
+  box-shadow:0 14px 34px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.admin-perm-item strong{display:block;color:#FFFFFF;font-size:13px;margin-bottom:2px;}
+.perm-section{
+  border:1px solid rgba(126,200,240,.16);
+  border-radius:16px;
+  padding:13px;
+  background:linear-gradient(145deg,rgba(255,255,255,.036),rgba(255,255,255,.010));
+  margin-top:10px;
+}
+.perm-section-title{
+  color:#7EC8F0;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.perm-card small{
+  display:block;
+  color:#8FAACB;
+  font-size:11px;
+  margin-top:2px;
+  line-height:1.25;
+}
 
 </style>
 </head>
@@ -1116,6 +1170,21 @@ body.auth-lock #loading-overlay,
   <div class="stitle">🔐 Usuários e Permissões</div>
 
   <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Permissões do Administrador</div>
+    <p style="color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:8px">
+      O perfil <strong style="color:#fff">Administrador</strong> tem liberação total dentro do sistema. Essas são as permissões completas que podem ser concedidas ou bloqueadas para novos usuários:
+    </p>
+    <div class="admin-perm-list" id="admin-perm-list">
+      <div class="admin-perm-item"><strong>Dashboard</strong>Visualizar painel, indicadores e resumo geral.</div>
+      <div class="admin-perm-item"><strong>Alunos</strong>Acessar lista, cadastrar, editar, importar, alterar situação e excluir alunos.</div>
+      <div class="admin-perm-item"><strong>Equipes</strong>Acessar, cadastrar, editar e excluir equipes.</div>
+      <div class="admin-perm-item"><strong>Presença</strong>Acessar tela de presença e lançar/alterar presenças.</div>
+      <div class="admin-perm-item"><strong>Relatórios</strong>Acessar, gerar e exportar relatórios.</div>
+      <div class="admin-perm-item"><strong>Usuários</strong>Visualizar usuários, cadastrar novos acessos, ativar/bloquear usuários e definir permissões.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
     <div class="card-title">Cadastrar novo usuário</div>
     <div class="form-row">
       <div>
@@ -1137,24 +1206,61 @@ body.auth-lock #loading-overlay,
         </div>
       </div>
       <div>
-        <label>Perfil</label>
+        <label>Perfil base</label>
         <select id="usr-perfil" onchange="aplicarPerfilUsuario()">
-          <option value="administrador">Administrador</option>
-          <option value="gestor">Gestor</option>
-          <option value="operador">Operador</option>
-          <option value="consulta">Consulta</option>
+          <option value="administrador">Administrador — acesso total</option>
+          <option value="gestor">Gestor — gestão operacional</option>
+          <option value="operador">Operador — presença e alunos</option>
+          <option value="consulta">Consulta — somente consulta/relatórios</option>
+          <option value="personalizado">Personalizado — escolher abaixo</option>
         </select>
       </div>
     </div>
 
-    <label>Permissões</label>
-    <div class="perm-grid">
-      <label class="perm-card"><input type="checkbox" class="usr-perm" value="dashboard" checked> Dashboard</label>
-      <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos" checked> Alunos</label>
-      <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes" checked> Equipes</label>
-      <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca" checked> Presença</label>
-      <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios" checked> Relatórios</label>
-      <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios" checked> Usuários</label>
+    <label>Conceder permissões ao novo usuário</label>
+    <div class="perm-section">
+      <div class="perm-section-title">Dashboard</div>
+      <div class="perm-grid">
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="dashboard_view" checked> <span>Visualizar Dashboard<small>Permite acessar indicadores e resumo geral.</small></span></label>
+      </div>
+    </div>
+    <div class="perm-section">
+      <div class="perm-section-title">Alunos</div>
+      <div class="perm-grid">
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_view" checked> <span>Visualizar alunos<small>Acessar a tela e consultar lista de alunos.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_manage" checked> <span>Cadastrar/editar alunos<small>Criar, editar, importar, avançar módulo e alterar situação.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="alunos_delete" checked> <span>Excluir alunos<small>Remover alunos individualmente ou em massa.</small></span></label>
+      </div>
+    </div>
+    <div class="perm-section">
+      <div class="perm-section-title">Equipes</div>
+      <div class="perm-grid">
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_view" checked> <span>Visualizar equipes<small>Acessar a tela de equipes.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_manage" checked> <span>Cadastrar/editar equipes<small>Criar e alterar equipes.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="equipes_delete" checked> <span>Excluir equipes<small>Remover equipes do sistema.</small></span></label>
+      </div>
+    </div>
+    <div class="perm-section">
+      <div class="perm-section-title">Presença</div>
+      <div class="perm-grid">
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca_view" checked> <span>Visualizar presença<small>Acessar a tela de presença.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="presenca_manage" checked> <span>Lançar/alterar presença<small>Marcar e alterar presenças dos alunos.</small></span></label>
+      </div>
+    </div>
+    <div class="perm-section">
+      <div class="perm-section-title">Relatórios</div>
+      <div class="perm-grid">
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios_view" checked> <span>Visualizar relatórios<small>Acessar tela e histórico de relatórios.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="relatorios_generate" checked> <span>Gerar/exportar relatórios<small>Criar relatórios e exportar arquivos.</small></span></label>
+      </div>
+    </div>
+    <div class="perm-section">
+      <div class="perm-section-title">Usuários e acessos</div>
+      <div class="perm-grid">
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_view" checked> <span>Visualizar usuários<small>Ver a lista de usuários cadastrados.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_create" checked> <span>Cadastrar usuários<small>Criar novos acessos com e-mail e senha.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_status" checked> <span>Ativar/bloquear usuários<small>Controlar se um acesso fica ativo ou inativo.</small></span></label>
+      </div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
@@ -1536,13 +1642,31 @@ function saveDB(){
 function newId(){ return nextId++; }
 
 
-const PERFIS_PERMISSOES = {
-  administrador:{dashboard:true,alunos:true,equipes:true,presenca:true,relatorios:true,usuarios:true},
-  gestor:{dashboard:true,alunos:true,equipes:true,presenca:true,relatorios:true,usuarios:false},
-  operador:{dashboard:true,alunos:true,equipes:false,presenca:true,relatorios:false,usuarios:false},
-  consulta:{dashboard:true,alunos:false,equipes:false,presenca:false,relatorios:true,usuarios:false}
+const PERMISSOES_LABELS = {
+  dashboard_view:'Dashboard: visualizar painel',
+  alunos_view:'Alunos: visualizar lista',
+  alunos_manage:'Alunos: cadastrar/editar/importar/situação',
+  alunos_delete:'Alunos: excluir',
+  equipes_view:'Equipes: visualizar',
+  equipes_manage:'Equipes: cadastrar/editar',
+  equipes_delete:'Equipes: excluir',
+  presenca_view:'Presença: visualizar',
+  presenca_manage:'Presença: lançar/alterar',
+  relatorios_view:'Relatórios: visualizar',
+  relatorios_generate:'Relatórios: gerar/exportar',
+  usuarios_view:'Usuários: visualizar',
+  usuarios_create:'Usuários: cadastrar',
+  usuarios_status:'Usuários: ativar/bloquear'
 };
-const PAGE_AREA = {dashboard:'dashboard',alunos:'alunos',equipes:'equipes',presenca:'presenca',exportar:'relatorios',usuarios:'usuarios'};
+const PERFIS_PERMISSOES = {
+  administrador:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:true,equipes_view:true,equipes_manage:true,equipes_delete:true,presenca_view:true,presenca_manage:true,relatorios_view:true,relatorios_generate:true,usuarios_view:true,usuarios_create:true,usuarios_status:true},
+  gestor:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:false,equipes_view:true,equipes_manage:true,equipes_delete:false,presenca_view:true,presenca_manage:true,relatorios_view:true,relatorios_generate:true,usuarios_view:false,usuarios_create:false,usuarios_status:false},
+  operador:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:false,equipes_view:true,equipes_manage:false,equipes_delete:false,presenca_view:true,presenca_manage:true,relatorios_view:false,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_status:false},
+  consulta:{dashboard_view:true,alunos_view:true,alunos_manage:false,alunos_delete:false,equipes_view:true,equipes_manage:false,equipes_delete:false,presenca_view:false,presenca_manage:false,relatorios_view:true,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_status:false},
+  personalizado:{dashboard_view:true,alunos_view:false,alunos_manage:false,alunos_delete:false,equipes_view:false,equipes_manage:false,equipes_delete:false,presenca_view:false,presenca_manage:false,relatorios_view:false,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_status:false}
+};
+const PAGE_AREA = {dashboard:'dashboard_view',alunos:'alunos_view',equipes:'equipes_view',presenca:'presenca_view',exportar:'relatorios_view',usuarios:'usuarios_view'};
+const LEGACY_PERM_MAP = {dashboard:'dashboard_view',alunos:'alunos_view',equipes:'equipes_view',presenca:'presenca_view',relatorios:'relatorios_view',usuarios:'usuarios_view'};
 
 function normalizarDB(){
   if(!DB.alunos) DB.alunos=[];
@@ -1559,7 +1683,7 @@ function getUsuarioAtual(){
 
 function isAdminAtual(){
   const u = getUsuarioAtual();
-  return !u || u.perfil === 'administrador' || (u.permissoes && u.permissoes.usuarios === true);
+  return !u || u.perfil === 'administrador' || !!(u.permissoes && (u.permissoes.usuarios_view || u.permissoes.usuarios_create || u.permissoes.usuarios_status || u.permissoes.usuarios));
 }
 
 function userCan(area){
@@ -1567,7 +1691,13 @@ function userCan(area){
   if(!u) return true; // primeiro acesso vira administrador
   if(u.ativo === false) return false;
   if(u.perfil === 'administrador') return true;
-  return !!(u.permissoes && u.permissoes[area]);
+  const perms = u.permissoes || {};
+  if(perms[area] === true) return true;
+  const mapped = LEGACY_PERM_MAP[area];
+  if(mapped && perms[mapped] === true) return true;
+  // Compatibilidade com permissões antigas salvas como dashboard/alunos/equipes/etc.
+  if(Object.prototype.hasOwnProperty.call(LEGACY_PERM_MAP, area) && perms[area] === true) return true;
+  return false;
 }
 
 async function garantirUsuarioAdminInicial(){
@@ -1604,6 +1734,10 @@ function aplicarPermissoesUI(){
     const area = PAGE_AREA[page] || page;
     btn.style.display = userCan(area) ? '' : 'none';
   });
+  // Ajustes visuais básicos para ações bloqueadas
+  document.querySelectorAll('[onclick*="openEquipeModal"]').forEach(el=>el.style.display = userCan('equipes_manage') ? '' : 'none');
+  document.querySelectorAll('[onclick*="openAlunoModal"],[onclick*="openImportModal"],[onclick*="openAvancarModuloModal"]').forEach(el=>el.style.display = userCan('alunos_manage') ? '' : 'none');
+  document.querySelectorAll('[onclick*="excluirSelecionados"]').forEach(el=>el.style.display = userCan('alunos_delete') ? '' : 'none');
 }
 
 function permissoesSelecionadas(){
@@ -1613,6 +1747,7 @@ function permissoesSelecionadas(){
 }
 
 function setPermissoesForm(perms){
+  perms = perms || {};
   document.querySelectorAll('.usr-perm').forEach(chk=>chk.checked = !!perms[chk.value]);
 }
 
@@ -1628,7 +1763,7 @@ function limparFormUsuario(){
 }
 
 async function cadastrarUsuarioSistema(){
-  if(!isAdminAtual()){
+  if(!userCan('usuarios_create')){
     toast('Você não tem permissão para cadastrar usuários.', true);
     return;
   }
@@ -1686,13 +1821,13 @@ function renderUsuarios(){
   if(!tb) return;
   normalizarDB();
 
-  if(!isAdminAtual()){
+  if(!userCan('usuarios_view')){
     tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:18px">Você não tem permissão para visualizar usuários.</td></tr>';
     return;
   }
 
   tb.innerHTML = DB.usuarios.map((u,idx)=>{
-    const perms = Object.entries(u.permissoes||{}).filter(([k,v])=>v).map(([k])=>k).join(', ');
+    const perms = Object.entries(u.permissoes||{}).filter(([k,v])=>v).map(([k])=>PERMISSOES_LABELS[k]||k).join('<br>');
     const ativo = u.ativo !== false;
     return `<tr>
       <td><strong>${u.nome||'—'}</strong></td>
@@ -1708,7 +1843,7 @@ function renderUsuarios(){
 }
 
 function alternarUsuarioAtivo(idx){
-  if(!isAdminAtual()) return toast('Sem permissão.', true);
+  if(!userCan('usuarios_status')) return toast('Sem permissão.', true);
   if(!DB.usuarios[idx]) return;
   const atual = window._firebase && window._firebase.currentUser ? window._firebase.currentUser() : null;
   if(atual && DB.usuarios[idx].uid === atual.uid){
@@ -1773,6 +1908,7 @@ function openModal(id){ document.getElementById(id).classList.add('open'); }
 // EQUIPES
 // ══════════════════════════════════════════
 function openEquipeModal(id=null){
+  if(!userCan('equipes_manage')){ toast('Você não tem permissão para cadastrar ou editar equipes.', true); return; }
   document.getElementById('eq-id').value = id||'';
   if(id){
     const eq = DB.equipes.find(e=>e.id===id);
@@ -1859,6 +1995,7 @@ function openAlunoModal(id=null){
 }
 
 function salvarAluno(){
+  if(!userCan('alunos_manage')){ toast('Você não tem permissão para cadastrar ou editar alunos.', true); return; }
   const nome=document.getElementById('al-nome').value.trim();
   if(!nome){ toast('Digite o nome do aluno', true); return; }
   const inscricao = document.getElementById('al-inscricao').value.trim();
@@ -1878,6 +2015,7 @@ function salvarAluno(){
 }
 
 function openAvancarModuloModal(){
+  if(!userCan('alunos_manage')){ toast('Você não tem permissão para avançar módulos.', true); return; }
   document.getElementById('avancar-preview').style.display='none';
   openModal('modal-avancar');
 }
@@ -1905,6 +2043,7 @@ function previewAvancar(){
 }
 
 function confirmarAvancar(){
+  if(!userCan('alunos_manage')){ toast('Você não tem permissão para avançar módulos.', true); return; }
   const {ativos, origem, destino} = getAlunosParaAvancar();
   if(!ativos.length){ toast(`Nenhum aluno ativo no ${MODULOS[origem].nome}.`, true); return; }
   if(!confirm(`Mover ${ativos.length} aluno(s) do ${MODULOS[origem].nome} para o ${MODULOS[destino].nome}?`)) return;
@@ -1917,16 +2056,19 @@ function confirmarAvancar(){
 }
 
 function marcarDesistente(id){
+  if(!userCan('alunos_manage')){ toast('Você não tem permissão para alterar a situação do aluno.', true); return; }
   if(!confirm('Marcar este aluno como Desistente?')) return;
   const al=DB.alunos.find(a=>a.id===id);
   if(al){ al.situacao='DESISTENTE'; saveDB(); renderAlunos(); renderDashboard(); toast('Aluno marcado como Desistente.'); }
 }
 function reativarAluno(id){
+  if(!userCan('alunos_manage')){ toast('Você não tem permissão para alterar a situação do aluno.', true); return; }
   const al=DB.alunos.find(a=>a.id===id);
   if(al){ al.situacao='ATIVO'; saveDB(); renderAlunos(); renderDashboard(); toast('Aluno reativado! ✓'); }
 }
 
 function deletarAluno(id){
+  if(!userCan('alunos_delete')){ toast('Você não tem permissão para excluir alunos.', true); return; }
   if(!confirm('Remover este aluno?')) return;
   DB.alunos=DB.alunos.filter(a=>a.id!==id);
   Object.keys(DB.presencas).forEach(k=>{ if(k.startsWith(id+'_')) delete DB.presencas[k]; });
@@ -2008,6 +2150,7 @@ function toggleSelecionarTodos(){
 }
 
 function excluirSelecionados(){
+  if(!userCan('alunos_delete')){ toast('Você não tem permissão para excluir alunos.', true); return; }
   const n=_selectedIds.size;
   if(!n){ toast('Nenhum aluno selecionado',true); return; }
   if(!confirm(`Excluir ${n} aluno(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
@@ -2022,6 +2165,7 @@ function excluirSelecionados(){
 
 // ── IMPORTAR LISTA ──
 function openImportModal(){
+  if(!userCan('alunos_manage')){ toast('Você não tem permissão para importar alunos.', true); return; }
   refreshEquipeSelects();
   document.getElementById('imp-nomes').value='';
   document.getElementById('imp-preview').style.display='none';
@@ -2253,6 +2397,7 @@ function renderPresencaTabela(){
 }
 
 function togglePres(alunoId, modulo, semIdx, aula, el){
+  if(!userCan('presenca_manage')){ toast('Você não tem permissão para lançar presença.', true); return; }
   const key=presKey(alunoId,modulo,semIdx,aula);
   DB.presencas[key]=!DB.presencas[key];
   const p=DB.presencas[key];
