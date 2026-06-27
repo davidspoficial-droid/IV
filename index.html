@@ -15,7 +15,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -101,6 +101,12 @@
         uid: uid || '',
         atualizadoEm: new Date().toISOString()
       });
+      return true;
+    },
+    async apagarUsername(username) {
+      const cleanUsername = normalizarUsernameFirebase(username);
+      if(!cleanUsername) return true;
+      await deleteDoc(USERNAME_REF(cleanUsername));
       return true;
     },
     logout() {
@@ -1278,8 +1284,27 @@ body.auth-lock #loading-overlay,
 }
 
 
-/* Oculta botões superiores: Salvar Backup e Gerar Relatório */
-.header-right{display:none!important;}
+/* AÇÕES DE USUÁRIO */
+.user-actions{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.user-actions .btn{
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:11px;
+}
+
+#usr-email[readonly],
+#usr-senha:disabled{
+  opacity:.72;
+  cursor:not-allowed;
+  border-color:rgba(126,200,240,.12)!important;
+}
 
 </style>
 </head>
@@ -1514,7 +1539,8 @@ body.auth-lock #loading-overlay,
   <div class="stitle">🔐 Usuários e Permissões</div>
 
   <div class="card" style="margin-bottom:20px">
-    <div class="card-title">Cadastrar novo usuário</div>
+    <div class="card-title" id="usuario-form-title">Cadastrar novo usuário</div>
+    <input type="hidden" id="usr-edit-idx" value="">
     <div class="form-row tri">
       <div>
         <label>Nome</label>
@@ -1522,7 +1548,7 @@ body.auth-lock #loading-overlay,
       </div>
       <div>
         <label>Username de acesso</label>
-        <input id="usr-username" type="text" placeholder="ex: joao.silva" autocomplete="off"><div class="hint" style="margin-top:5px;font-size:11px;color:var(--muted)">Será o único dado usado na tela de login. O e-mail fica apenas vinculado internamente.</div>
+        <input id="usr-username" type="text" placeholder="ex: joao.silva" autocomplete="off">
       </div>
       <div>
         <label>E-mail vinculado</label>
@@ -1614,14 +1640,17 @@ body.auth-lock #loading-overlay,
       <div class="perm-section-title">Usuários e acessos</div>
       <div class="perm-grid">
         <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_view" checked> <span>Ver usuários<small>Ver a lista de usuários cadastrados.</small></span></label>
-        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_create" checked> <span>Cadastrar<small>Criar novos acessos com e-mail e senha.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_create" checked> <span>Cadastrar<small>Criar novos acessos com username, e-mail e senha.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_edit" checked> <span>Editar<small>Alterar dados, perfil e permissões do usuário.</small></span></label>
         <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_status" checked> <span>Ativar/bloquear<small>Controlar se um acesso fica ativo ou inativo.</small></span></label>
+        <label class="perm-card"><input type="checkbox" class="usr-perm" value="usuarios_delete" checked> <span>Excluir<small>Remover acesso e bloquear login pelo username.</small></span></label>
       </div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="btn-cancelar-edicao-usuario" onclick="limparFormUsuario()" style="display:none">Cancelar edição</button>
       <button class="btn btn-ghost" onclick="limparFormUsuario()">Limpar formulário</button>
-      <button class="btn btn-blue" onclick="cadastrarUsuarioSistema()">Cadastrar usuário</button>
+      <button class="btn btn-blue" id="btn-salvar-usuario" onclick="cadastrarUsuarioSistema()">Cadastrar usuário</button>
     </div>
   </div>
 
@@ -2026,14 +2055,16 @@ const PERMISSOES_LABELS = {
   relatorios_generate:'Relatórios: gerar/exportar',
   usuarios_view:'Usuários: visualizar',
   usuarios_create:'Usuários: cadastrar',
-  usuarios_status:'Usuários: ativar/bloquear'
+  usuarios_edit:'Usuários: editar dados/permissões',
+  usuarios_status:'Usuários: ativar/bloquear',
+  usuarios_delete:'Usuários: excluir'
 };
 const PERFIS_PERMISSOES = {
-  administrador:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:true,equipes_view:true,equipes_manage:true,equipes_delete:true,presenca_view:true,presenca_manage:true,relatorios_view:true,relatorios_generate:true,usuarios_view:true,usuarios_create:true,usuarios_status:true},
-  gestor:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:false,equipes_view:true,equipes_manage:true,equipes_delete:false,presenca_view:true,presenca_manage:true,relatorios_view:true,relatorios_generate:true,usuarios_view:false,usuarios_create:false,usuarios_status:false},
-  operador:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:false,equipes_view:true,equipes_manage:false,equipes_delete:false,presenca_view:true,presenca_manage:true,relatorios_view:false,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_status:false},
-  consulta:{dashboard_view:true,alunos_view:true,alunos_manage:false,alunos_delete:false,equipes_view:true,equipes_manage:false,equipes_delete:false,presenca_view:false,presenca_manage:false,relatorios_view:true,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_status:false},
-  personalizado:{dashboard_view:true,alunos_view:false,alunos_manage:false,alunos_delete:false,equipes_view:false,equipes_manage:false,equipes_delete:false,presenca_view:false,presenca_manage:false,relatorios_view:false,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_status:false}
+  administrador:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:true,equipes_view:true,equipes_manage:true,equipes_delete:true,presenca_view:true,presenca_manage:true,relatorios_view:true,relatorios_generate:true,usuarios_view:true,usuarios_create:true,usuarios_edit:true,usuarios_status:true,usuarios_delete:true},
+  gestor:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:false,equipes_view:true,equipes_manage:true,equipes_delete:false,presenca_view:true,presenca_manage:true,relatorios_view:true,relatorios_generate:true,usuarios_view:false,usuarios_create:false,usuarios_edit:false,usuarios_status:false,usuarios_delete:false},
+  operador:{dashboard_view:true,alunos_view:true,alunos_manage:true,alunos_delete:false,equipes_view:true,equipes_manage:false,equipes_delete:false,presenca_view:true,presenca_manage:true,relatorios_view:false,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_edit:false,usuarios_status:false,usuarios_delete:false},
+  consulta:{dashboard_view:true,alunos_view:true,alunos_manage:false,alunos_delete:false,equipes_view:true,equipes_manage:false,equipes_delete:false,presenca_view:false,presenca_manage:false,relatorios_view:true,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_edit:false,usuarios_status:false,usuarios_delete:false},
+  personalizado:{dashboard_view:true,alunos_view:false,alunos_manage:false,alunos_delete:false,equipes_view:false,equipes_manage:false,equipes_delete:false,presenca_view:false,presenca_manage:false,relatorios_view:false,relatorios_generate:false,usuarios_view:false,usuarios_create:false,usuarios_edit:false,usuarios_status:false,usuarios_delete:false}
 };
 const PAGE_AREA = {dashboard:'dashboard_view',alunos:'alunos_view',equipes:'equipes_view',presenca:'presenca_view',exportar:'relatorios_view',usuarios:'usuarios_view'};
 const LEGACY_PERM_MAP = {dashboard:'dashboard_view',alunos:'alunos_view',equipes:'equipes_view',presenca:'presenca_view',relatorios:'relatorios_view',usuarios:'usuarios_view'};
@@ -2053,7 +2084,7 @@ function getUsuarioAtual(){
 
 function isAdminAtual(){
   const u = getUsuarioAtual();
-  return !u || u.perfil === 'administrador' || !!(u.permissoes && (u.permissoes.usuarios_view || u.permissoes.usuarios_create || u.permissoes.usuarios_status || u.permissoes.usuarios));
+  return !u || u.perfil === 'administrador' || !!(u.permissoes && (u.permissoes.usuarios_view || u.permissoes.usuarios_create || u.permissoes.usuarios_edit || u.permissoes.usuarios_status || u.permissoes.usuarios_delete || u.permissoes.usuarios));
 }
 
 function userCan(area){
@@ -2168,11 +2199,33 @@ function aplicarPerfilUsuario(){
 
 function limparFormUsuario(){
   ['usr-nome','usr-username','usr-email','usr-senha'].forEach(id=>document.getElementById(id).value='');
+  const edit = document.getElementById('usr-edit-idx');
+  const email = document.getElementById('usr-email');
+  const senha = document.getElementById('usr-senha');
+  const title = document.getElementById('usuario-form-title');
+  const btn = document.getElementById('btn-salvar-usuario');
+  const cancel = document.getElementById('btn-cancelar-edicao-usuario');
+
+  if(edit) edit.value='';
+  if(email) email.readOnly = false;
+  if(senha){
+    senha.disabled = false;
+    senha.placeholder = 'Mínimo 6 caracteres';
+  }
+  if(title) title.textContent = 'Cadastrar novo usuário';
+  if(btn) btn.textContent = 'Cadastrar usuário';
+  if(cancel) cancel.style.display = 'none';
+
   document.getElementById('usr-perfil').value='operador';
   aplicarPerfilUsuario();
 }
 
 async function cadastrarUsuarioSistema(){
+  const editIdx = document.getElementById('usr-edit-idx') ? document.getElementById('usr-edit-idx').value : '';
+  if(editIdx !== ''){
+    return atualizarUsuarioSistema(Number(editIdx));
+  }
+
   if(!userCan('usuarios_create')){
     toast('Você não tem permissão para cadastrar usuários.', true);
     return;
@@ -2266,10 +2319,138 @@ function renderUsuarios(){
       <td style="color:var(--muted);font-size:12px">${perms||'—'}</td>
       <td style="text-align:center">${ativo?'<span class="badge badge-g">Ativo</span>':'<span class="badge badge-r">Inativo</span>'}</td>
       <td style="text-align:center">
-        <button class="btn btn-xs btn-ghost" onclick="alternarUsuarioAtivo(${idx})">${ativo?'Bloquear':'Ativar'}</button>
+        <div class="user-actions">
+          <button class="btn btn-xs btn-ghost" onclick="editarUsuarioSistema(${idx})">Editar</button>
+          <button class="btn btn-xs btn-ghost" onclick="alternarUsuarioAtivo(${idx})">${ativo?'Bloquear':'Ativar'}</button>
+          <button class="btn btn-xs btn-red" onclick="excluirUsuarioSistema(${idx})">Excluir</button>
+        </div>
       </td>
     </tr>`;
   }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:18px">Nenhum usuário cadastrado.</td></tr>';
+}
+
+
+function editarUsuarioSistema(idx){
+  if(!userCan('usuarios_edit')) return toast('Você não tem permissão para editar usuários.', true);
+
+  const u = DB.usuarios[idx];
+  if(!u) return;
+
+  document.getElementById('usr-edit-idx').value = idx;
+  document.getElementById('usr-nome').value = u.nome || '';
+  document.getElementById('usr-username').value = u.username || '';
+  document.getElementById('usr-email').value = u.email || '';
+  document.getElementById('usr-email').readOnly = true;
+  document.getElementById('usr-senha').value = '';
+  document.getElementById('usr-senha').disabled = true;
+  document.getElementById('usr-senha').placeholder = 'Senha não é alterada na edição';
+  document.getElementById('usr-perfil').value = u.perfil || 'operador';
+
+  setPermissoesForm(u.permissoes || PERFIS_PERMISSOES.operador);
+
+  const title = document.getElementById('usuario-form-title');
+  const btn = document.getElementById('btn-salvar-usuario');
+  const cancel = document.getElementById('btn-cancelar-edicao-usuario');
+
+  if(title) title.textContent = 'Editar usuário';
+  if(btn) btn.textContent = 'Salvar alterações';
+  if(cancel) cancel.style.display = 'inline-flex';
+
+  document.getElementById('usr-nome').focus();
+  toast('Usuário carregado para edição.');
+}
+
+async function atualizarUsuarioSistema(idx){
+  if(!userCan('usuarios_edit')) return toast('Você não tem permissão para editar usuários.', true);
+
+  const u = DB.usuarios[idx];
+  if(!u) return toast('Usuário não encontrado.', true);
+
+  const nome = document.getElementById('usr-nome').value.trim();
+  const username = normalizarUsername(document.getElementById('usr-username').value);
+  const perfil = document.getElementById('usr-perfil').value;
+  const permissoes = permissoesSelecionadas();
+  const usernameAnterior = normalizarUsername(u.username || '');
+
+  if(!nome || !username){
+    toast('Informe nome e username.', true);
+    return;
+  }
+
+  if(!usernameValido(username)){
+    toast('Username inválido. Use 3 a 24 caracteres: letras, números, ponto, traço ou underline.', true);
+    return;
+  }
+
+  if((DB.usuarios||[]).some((outro,i) => i !== idx && normalizarUsername(outro.username) === username)){
+    toast('Este username já está cadastrado.', true);
+    return;
+  }
+
+  try{
+    showSync('saving','💾 Salvando usuário...');
+
+    if(username !== usernameAnterior){
+      const usernameJaExiste = await window._firebase.usernameExiste(username).catch(()=>false);
+      if(usernameJaExiste){
+        toast('Este username já existe no índice de login.', true);
+        showSync('error','❌ Erro');
+        return;
+      }
+
+      await window._firebase.salvarUsername(username, u.email, u.uid);
+      if(usernameAnterior) await window._firebase.apagarUsername(usernameAnterior).catch(()=>{});
+    } else {
+      await window._firebase.salvarUsername(username, u.email, u.uid).catch(()=>{});
+    }
+
+    u.nome = nome;
+    u.username = username;
+    u.perfil = perfil;
+    u.permissoes = permissoes;
+    u.atualizadoEm = new Date().toISOString();
+
+    await window._firebase.save(DB);
+    renderUsuarios();
+    aplicarPermissoesUI();
+    limparFormUsuario();
+    showSync('saved','✅ Usuário atualizado');
+    toast('Usuário atualizado com sucesso.');
+  }catch(e){
+    console.error(e);
+    showSync('error','❌ Erro');
+    toast('Erro ao atualizar usuário.', true);
+  }
+}
+
+async function excluirUsuarioSistema(idx){
+  if(!userCan('usuarios_delete')) return toast('Você não tem permissão para excluir usuários.', true);
+
+  const u = DB.usuarios[idx];
+  if(!u) return;
+
+  const atual = window._firebase && window._firebase.currentUser ? window._firebase.currentUser() : null;
+  if(atual && u.uid === atual.uid){
+    toast('Você não pode excluir seu próprio usuário.', true);
+    return;
+  }
+
+  if(!confirm(`Excluir o usuário ${u.nome || u.username || u.email}?`)) return;
+
+  try{
+    showSync('saving','🗑️ Excluindo usuário...');
+    if(u.username) await window._firebase.apagarUsername(u.username).catch(()=>{});
+    DB.usuarios.splice(idx,1);
+    await window._firebase.save(DB);
+    renderUsuarios();
+    aplicarPermissoesUI();
+    showSync('saved','✅ Usuário excluído');
+    toast('Usuário excluído do sistema.');
+  }catch(e){
+    console.error(e);
+    showSync('error','❌ Erro');
+    toast('Erro ao excluir usuário.', true);
+  }
 }
 
 function alternarUsuarioAtivo(idx){
