@@ -6,6 +6,10 @@
 <title>Instituto de Vencedores — Sistema de Gestão</title>
 <link rel="icon" type="image/png" href="./IV.png">
 <link rel="apple-touch-icon" href="./IV.png">
+<link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="./mobile-upgrade.css">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#030712">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
@@ -13,6 +17,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // ══ CONFIG FIREBASE ══
   const firebaseConfig = {
@@ -27,11 +32,21 @@
 
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
+  const auth = getAuth(app);
   const db  = getFirestore(app);
   const DOC_REF = doc(db, "sistema", "dados");
 
   // Expõe funções ao escopo global para o app usar
   window._firebase = {
+    login(email, senha) {
+      return signInWithEmailAndPassword(auth, email, senha);
+    },
+    logout() {
+      return signOut(auth);
+    },
+    onAuth(callback) {
+      return onAuthStateChanged(auth, callback);
+    },
     async load() {
       try {
         const snap = await getDoc(DOC_REF);
@@ -468,9 +483,176 @@ tbody tr:hover,.dash-eq-table tr:hover td{background:rgba(126,200,240,.065);}
 /* Oculta botões superiores: Salvar Backup e Gerar Relatório */
 .header-right{display:none!important;}
 
+
+/* ═════════════════════════════════════════════════════
+   LOGIN DIRETO NO INDEX + BOTÃO SAIR
+   ═════════════════════════════════════════════════════ */
+body.auth-lock .header,
+body.auth-lock .main-nav,
+body.auth-lock .page,
+body.auth-lock #sync-badge {
+  display:none!important;
+}
+
+#auth-screen{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(47,128,237,.28), transparent 34%),
+    radial-gradient(circle at 85% 10%, rgba(34,211,238,.16), transparent 32%),
+    linear-gradient(145deg,#020611,#07111F 55%,#030712);
+}
+#auth-screen::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size:42px 42px;
+  opacity:.55;
+}
+.auth-card{
+  position:relative;
+  width:min(440px,100%);
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018)),rgba(7,17,31,.94);
+  border:1px solid rgba(126,200,240,.24);
+  border-radius:28px;
+  padding:32px;
+  box-shadow:0 34px 100px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+.auth-logo{
+  width:92px;
+  height:auto;
+  display:block;
+  margin:0 0 18px;
+  filter:brightness(1.35) contrast(1.16) saturate(1.18) drop-shadow(0 14px 24px rgba(0,0,0,.48));
+}
+.auth-card h1{
+  margin:0 0 8px;
+  font-family:'Playfair Display',serif;
+  font-size:30px;
+  line-height:1.05;
+  color:#F4F8FF;
+}
+.auth-card p{
+  margin:0 0 22px;
+  color:#8FAACB;
+  font-size:13px;
+  line-height:1.55;
+}
+.auth-card label{
+  display:block;
+  margin:12px 0 6px;
+  color:#AFC7E6;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+.auth-card input{
+  width:100%;
+  padding:13px 15px;
+  border-radius:14px;
+  border:1px solid rgba(126,200,240,.20);
+  background:rgba(5,14,28,.92);
+  color:#F4F8FF;
+  outline:none;
+}
+.auth-card input:focus{
+  border-color:rgba(126,200,240,.62);
+  box-shadow:0 0 0 4px rgba(47,128,237,.14);
+}
+.auth-card button{
+  width:100%;
+  margin-top:18px;
+  padding:13px 16px;
+  border:0;
+  border-radius:999px;
+  background:linear-gradient(135deg,#2F80ED,#22D3EE);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  box-shadow:0 14px 34px rgba(47,128,237,.28);
+}
+.auth-card button:hover{transform:translateY(-1px);}
+#auth-error{
+  margin-top:12px;
+  min-height:17px;
+  color:#F08080;
+  font-size:12px;
+  font-weight:700;
+}
+.auth-logout{
+  margin-left:auto;
+  white-space:nowrap;
+  padding:7px 14px 7px 10px;
+  gap:8px;
+  background:linear-gradient(135deg,rgba(126,200,240,.10),rgba(47,128,237,.07));
+  border:1px solid rgba(126,200,240,.30);
+  color:#DFF6FF;
+  box-shadow:0 12px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.auth-logout:hover{
+  background:linear-gradient(135deg,rgba(126,200,240,.18),rgba(47,128,237,.13));
+  border-color:rgba(126,200,240,.50);
+  color:#FFFFFF;
+  transform:translateY(-1px);
+}
+.auth-logout-icon{
+  width:26px;
+  height:26px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle at 30% 20%,rgba(126,200,240,.36),rgba(47,128,237,.12));
+  border:1px solid rgba(126,200,240,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 18px rgba(0,0,0,.26);
+}
+.auth-logout-icon svg{
+  width:16px;
+  height:16px;
+  display:block;
+}
+body.auth-lock .auth-logout{display:none!important;}
+@media(max-width:700px){
+  .auth-card{padding:26px 22px;border-radius:24px;}
+  .auth-card h1{font-size:26px;}
+  .auth-logo{width:82px;}
+  .auth-logout{width:100%;justify-content:center;margin-left:0;}
+}
+
 </style>
 </head>
-<body>
+<body class="auth-lock">
+
+<!-- LOGIN DIRETO NO INDEX -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <img src="./IV.png" class="auth-logo" alt="Instituto de Vencedores">
+    <h1>Acesso ao Sistema</h1>
+    <p>Entre com o e-mail e senha cadastrados no Firebase Authentication.</p>
+
+    <label>E-mail</label>
+    <input id="auth-email" type="email" placeholder="seuemail@exemplo.com" autocomplete="username">
+
+    <label>Senha</label>
+    <input id="auth-senha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
+
+    <button onclick="entrarSistema()">Entrar</button>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
 
 <!-- LOADING OVERLAY -->
 <div id="loading-overlay">
@@ -495,6 +677,23 @@ tbody tr:hover,.dash-eq-table tr:hover td{background:rgba(126,200,240,.065);}
       <div class="header-subtitle">Sistema premium de gestão de presença</div>
     </div>
   </div>
+  <button class="btn btn-ghost btn-sm auth-logout" onclick="sairSistema()" title="Sair do sistema" aria-label="Sair do sistema">
+    <span class="auth-logout-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="logoutPremiumGradient" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF"/>
+            <stop offset="0.55" stop-color="#BFEAFF"/>
+            <stop offset="1" stop-color="#7EC8F0"/>
+          </linearGradient>
+        </defs>
+        <path d="M10.75 5.5H6.9C5.85 5.5 5 6.35 5 7.4v9.2c0 1.05.85 1.9 1.9 1.9h3.85" stroke="url(#logoutPremiumGradient)" stroke-width="1.9" stroke-linecap="round"/>
+        <path d="M13.25 8.25L17 12l-3.75 3.75" stroke="url(#logoutPremiumGradient)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16.75 12H9" stroke="url(#logoutPremiumGradient)" stroke-width="1.9" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span>Sair</span>
+  </button>
   <div class="header-right">
     <button class="btn btn-ghost btn-sm" onclick="exportarDados()">💾 Salvar Backup</button>
     <button class="btn btn-blue btn-sm" onclick="showPage('exportar')">📤 Gerar Relatório</button>
@@ -2364,8 +2563,69 @@ tbody tr:nth-child(even){background:rgba(255,255,255,.018);}
 </style></head><body><main class="report-shell"><header class="report-header"><div class="report-brand"><img class="report-logo" src="${logoSrc}" alt="Logo Instituto de Vencedores"><div><div class="report-title">Instituto de Vencedores</div><div class="report-subtitle">Relatório de Gestão de Presença</div></div></div><div class="report-meta"><div class="report-badge">Relatório Oficial</div><div>Gerado em ${dt}</div></div></header><section class="report-content">${body}</section><div class="report-footer">Instituto de Vencedores • Sistema de Gestão de Presença</div></main></body></html>`;
 }
 
-// ══ INIT ══
-loadDB();
+// ══ INIT COM LOGIN FIREBASE ══
+let appJaCarregado = false;
+
+window.entrarSistema = async function(){
+  const email = document.getElementById('auth-email').value.trim();
+  const senha = document.getElementById('auth-senha').value;
+  const erro = document.getElementById('auth-error');
+
+  erro.textContent = '';
+
+  if(!email || !senha){
+    erro.textContent = 'Informe o e-mail e a senha.';
+    return;
+  }
+
+  try{
+    await window._firebase.login(email, senha);
+  }catch(e){
+    console.error(e);
+    erro.textContent = 'E-mail ou senha incorretos.';
+  }
+};
+
+window.sairSistema = async function(){
+  try{
+    await window._firebase.logout();
+  }catch(e){
+    console.error(e);
+    toast('Erro ao sair do sistema.', true);
+  }
+};
+
+async function iniciarAuthGate(){
+  if(!window._firebaseReady){
+    await new Promise(res => document.addEventListener('firebase-ready', res, {once:true}));
+  }
+
+  window._firebase.onAuth((user)=>{
+    const authScreen = document.getElementById('auth-screen');
+    const overlay = document.getElementById('loading-overlay');
+
+    if(user){
+      document.body.classList.remove('auth-lock');
+      if(authScreen) authScreen.style.display = 'none';
+
+      if(!appJaCarregado){
+        appJaCarregado = true;
+        loadDB();
+      }
+    }else{
+      document.body.classList.add('auth-lock');
+      if(authScreen) authScreen.style.display = 'flex';
+      if(overlay) overlay.style.display = 'none';
+    }
+  });
+}
+
+iniciarAuthGate();
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+}
+
 document.getElementById('pres-modulo').addEventListener('change',()=>{
   refreshEquipeSelects('pres-equipe-filtro');
 });
