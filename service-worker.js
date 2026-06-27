@@ -1,4 +1,4 @@
-const IV_CACHE = 'iv-gestao-v3';
+const IV_CACHE = 'iv-gestao-v4';
 const IV_ASSETS = [
   './manifest.json',
   './IV.png',
@@ -26,8 +26,9 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(event.request.url);
   const isHtml = event.request.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('.html');
+  const isScript = url.pathname.endsWith('.js');
 
-  if (isHtml) {
+  if (isHtml || isScript) {
     event.respondWith(
       fetch(event.request)
         .then(response => response)
