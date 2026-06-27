@@ -529,25 +529,30 @@ body.auth-lock #sync-badge {
   backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
 }
+.auth-brand{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin:0 0 26px;
+}
 .auth-logo{
-  width:92px;
+  width:76px;
+  max-width:76px;
   height:auto;
   display:block;
-  margin:0 0 18px;
-  filter:brightness(1.35) contrast(1.16) saturate(1.18) drop-shadow(0 14px 24px rgba(0,0,0,.48));
+  flex:0 0 auto;
+  filter:brightness(1.38) contrast(1.18) saturate(1.20) drop-shadow(0 14px 24px rgba(0,0,0,.48)) drop-shadow(0 0 22px rgba(126,200,240,.22));
 }
 .auth-card h1{
-  margin:0 0 8px;
+  margin:0;
   font-family:'Playfair Display',serif;
-  font-size:30px;
-  line-height:1.05;
+  font-size:31px;
+  line-height:1.04;
   color:#F4F8FF;
-}
-.auth-card p{
-  margin:0 0 22px;
-  color:#8FAACB;
-  font-size:13px;
-  line-height:1.55;
+  background:linear-gradient(90deg,#fff,#DDF4FF 62%,#7EC8F0);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
 }
 .auth-card label{
   display:block;
@@ -626,8 +631,9 @@ body.auth-lock #sync-badge {
 body.auth-lock .auth-logout{display:none!important;}
 @media(max-width:700px){
   .auth-card{padding:26px 22px;border-radius:24px;}
+  .auth-brand{gap:13px;margin-bottom:24px;}
   .auth-card h1{font-size:26px;}
-  .auth-logo{width:82px;}
+  .auth-logo{width:66px;max-width:66px;}
   .auth-logout{width:100%;justify-content:center;margin-left:0;}
 }
 
@@ -638,9 +644,10 @@ body.auth-lock .auth-logout{display:none!important;}
 <!-- LOGIN DIRETO NO INDEX -->
 <div id="auth-screen">
   <div class="auth-card">
-    <img src="./IV.png" class="auth-logo" alt="Instituto de Vencedores">
-    <h1>Acesso ao Sistema</h1>
-    <p>Entre com o e-mail e senha cadastrados no Firebase Authentication.</p>
+    <div class="auth-brand">
+      <img src="./IV.png" class="auth-logo" alt="Instituto de Vencedores">
+      <h1>Instituto de Vencedores</h1>
+    </div>
 
     <label>E-mail</label>
     <input id="auth-email" type="email" placeholder="seuemail@exemplo.com" autocomplete="username">
@@ -694,6 +701,10 @@ body.auth-lock .auth-logout{display:none!important;}
     </span>
     <span>Sair</span>
   </button>
+  <div class="header-right">
+    <button class="btn btn-ghost btn-sm" onclick="exportarDados()">💾 Salvar Backup</button>
+    <button class="btn btn-blue btn-sm" onclick="showPage('exportar')">📤 Gerar Relatório</button>
+  </div>
 </div>
 
 <!-- MAIN NAV -->
