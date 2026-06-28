@@ -1,0 +1,25 @@
+/* Botão Sair dentro do menu lateral — somente mobile */
+@media (max-width: 820px){
+  body:has(.header:hover) .auth-logout,
+  body:has(.header:focus-within) .auth-logout,
+  body:has(.main-nav:hover) .auth-logout,
+  body:has(.main-nav:focus-within) .auth-logout,
+  .auth-logout:hover,
+  .auth-logout:focus{
+    transform:translateX(0)!important;
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+  }
+
+  .auth-logout{
+    position:fixed!important;
+    left:16px!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:18px!important;
+    width:calc(min(318px,84vw) - 32px)!important;
+    height:52px!important;
+    z-index:8002!important;
+  }
+}
