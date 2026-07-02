@@ -11,12 +11,6 @@
   "lang": "pt-BR",
   "icons": [
     {
-      "src": "./app-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
       "src": "./IV.png",
       "sizes": "470x458",
       "type": "image/png",
