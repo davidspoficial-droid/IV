@@ -6,3 +6,6 @@ import('./iv-custom-improvements.js?v=1').catch(function(e){console.error('Erro 
 
 // Ajuste fino: rótulo Telefone e coluna na ordem Nome → Telefone
 import('./iv-phone-column-order-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste da coluna telefone', e);});
+
+// Ajuste visual: botões do link e aulas perdidas compactas em sanfona premium
+import('./iv-report-compact-ui-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste compacto dos relatórios', e);});
