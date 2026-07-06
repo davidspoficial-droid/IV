@@ -21,3 +21,6 @@ import('./iv-final-retention-history-login-teams.js?v=1').catch(function(e){cons
 
 // Pesquisa sem diferenciar maiusculas, minusculas e acentos nas telas Alunos e Presenca
 import('./iv-search-case-insensitive-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste de pesquisa sem diferenciar letras', e);});
+
+// Historico de um Vencedor: trajetoria completa com presencas, faltas e sanfona premium de aulas perdidas
+import('./iv-history-trajectory-accordion-fix.js?v=1').catch(function(e){console.error('Erro ao carregar historico de trajetoria com sanfona', e);});
