@@ -20,13 +20,13 @@
   function loadCSS(){
     if(document.getElementById('iv-mobile-students-css')){
       var old = document.getElementById('iv-mobile-students-css');
-      if(old.getAttribute('href') !== './iv-mobile-students.css?v=2') old.setAttribute('href','./iv-mobile-students.css?v=2');
+      if(old.getAttribute('href') !== './iv-mobile-students.css?v=3') old.setAttribute('href','./iv-mobile-students.css?v=3');
       return;
     }
     var l = document.createElement('link');
     l.id = 'iv-mobile-students-css';
     l.rel = 'stylesheet';
-    l.href = './iv-mobile-students.css?v=2';
+    l.href = './iv-mobile-students.css?v=3';
     document.head.appendChild(l);
   }
 
