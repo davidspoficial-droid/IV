@@ -15,3 +15,6 @@ import('./iv-system-adjustments-202607.js?v=2').catch(function(e){console.error(
 
 // Regras de cadastro: nome repetido, nomes padronizados e modal de link compacto
 import('./iv-student-rules-modal-fix.js?v=1').catch(function(e){console.error('Erro ao carregar regras de alunos e modal compacto', e);});
+
+// Correcao final: retencao, historico sem botao Ver, login sem flash e tabela de equipes compacta
+import('./iv-final-retention-history-login-teams.js?v=1').catch(function(e){console.error('Erro ao carregar correcao final de retencao/historico/login/equipes', e);});
