@@ -30,3 +30,6 @@ import('./iv-mobile-dashboard-menu.js?v=1').catch(function(e){console.error('Err
 
 // Menu mobile hamburger premium
 import('./iv-mobile-hamburger-menu-fix.js?v=1').catch(function(e){console.error('Erro ao carregar menu hamburger mobile', e);});
+
+// Pagina Alunos mobile premium
+import('./iv-mobile-students-page.js?v=1').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
