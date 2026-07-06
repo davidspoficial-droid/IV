@@ -10,5 +10,5 @@ import('./iv-phone-column-order-fix.js?v=1').catch(function(e){console.error('Er
 // Ajuste visual: botões do link e aulas perdidas compactas em sanfona premium
 import('./iv-report-compact-ui-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste compacto dos relatórios', e);});
 
-// Ajustes gerais: tabela de alunos, telefone, login, relatório de retenção e cabeçalho de presença
-import('./iv-system-adjustments-202607.js?v=1').catch(function(e){console.error('Erro ao carregar ajustes gerais do sistema', e);});
+// Ajustes gerais: tabela de alunos, telefone, relatório de retenção e cabeçalho de presença
+import('./iv-system-adjustments-202607.js?v=2').catch(function(e){console.error('Erro ao carregar ajustes gerais do sistema', e);});
