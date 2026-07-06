@@ -32,4 +32,4 @@ import('./iv-mobile-dashboard-menu.js?v=1').catch(function(e){console.error('Err
 import('./iv-mobile-hamburger-menu-fix.js?v=1').catch(function(e){console.error('Erro ao carregar menu hamburger mobile', e);});
 
 // Pagina Alunos mobile premium compacta com sanfona
-import('./iv-mobile-students-page.js?v=2').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
+import('./iv-mobile-students-page.js?v=3').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
