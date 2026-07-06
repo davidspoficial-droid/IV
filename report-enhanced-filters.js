@@ -27,3 +27,6 @@ import('./iv-history-trajectory-accordion-fix.js?v=2').catch(function(e){console
 
 // Layout mobile proprio: dashboard e menu
 import('./iv-mobile-dashboard-menu.js?v=1').catch(function(e){console.error('Erro ao carregar layout mobile de dashboard e menu', e);});
+
+// Menu mobile hamburger premium
+import('./iv-mobile-hamburger-menu-fix.js?v=1').catch(function(e){console.error('Erro ao carregar menu hamburger mobile', e);});
