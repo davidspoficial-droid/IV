@@ -20,13 +20,13 @@
   function loadCSS(){
     if(document.getElementById('iv-mobile-students-css')){
       var old = document.getElementById('iv-mobile-students-css');
-      if(old.getAttribute('href') !== './iv-mobile-students.css?v=3') old.setAttribute('href','./iv-mobile-students.css?v=3');
+      if(old.getAttribute('href') !== './iv-mobile-students.css?v=4') old.setAttribute('href','./iv-mobile-students.css?v=4');
       return;
     }
     var l = document.createElement('link');
     l.id = 'iv-mobile-students-css';
     l.rel = 'stylesheet';
-    l.href = './iv-mobile-students.css?v=3';
+    l.href = './iv-mobile-students.css?v=4';
     document.head.appendChild(l);
   }
 
@@ -122,7 +122,7 @@
     var f = filtros();
     var itens = lista();
     var ativos = (db.alunos || []).filter(function(a){ return (a.situacao || 'ATIVO') === 'ATIVO'; }).length;
-    box.innerHTML = '<div class="iv-stu-hero"><div class="iv-stu-hero-top"><div><div class="iv-stu-title">Cadastro de Alunos</div><div class="iv-stu-sub">Cards compactos no mobile com informações extras em sanfona.</div></div><div class="iv-stu-count"><strong>' + itens.length + '</strong><span>Exibidos</span></div></div></div>' +
+    box.innerHTML = '<div class="iv-stu-hero"><div class="iv-stu-hero-top"><div><div class="iv-stu-title">Cadastro de Alunos</div></div><div class="iv-stu-count"><strong>' + itens.length + '</strong><span>Exibidos</span></div></div></div>' +
       '<div class="iv-stu-actions"><button type="button" class="iv-stu-btn primary" data-act="novo">+ Novo aluno</button><button type="button" class="iv-stu-btn" data-act="importar">📋 Importar</button></div>' +
       '<div class="iv-stu-actions-row"><button type="button" class="iv-stu-btn" data-act="avancar">⬆️ Avançar</button><button type="button" class="iv-stu-btn" data-act="todos">☑️ Selecionar</button><button type="button" class="iv-stu-btn danger" data-act="removerMarcados">🗑️ ' + marcados.size + '</button></div>' +
       '<div class="iv-stu-filter"><input id="iv-stu-search" class="iv-stu-search" placeholder="🔍 Buscar por nome, telefone, equipe..." value="' + esc(f.q) + '"><div class="iv-stu-filter-grid"><select id="iv-stu-equipe" class="iv-stu-select">' + optEquipes(f.eq) + '</select><select id="iv-stu-turma" class="iv-stu-select"><option value="">Todas as turmas</option><option value="quinta" ' + (f.turma === 'quinta' ? 'selected' : '') + '>Quinta-feira</option><option value="sabado" ' + (f.turma === 'sabado' ? 'selected' : '') + '>Sábado</option></select></div><div class="iv-stu-sub" style="margin-top:8px">' + ativos + ' alunos ativos no total · ' + (db.alunos || []).length + ' cadastrados</div></div>' +
