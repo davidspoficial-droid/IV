@@ -1,13 +1,13 @@
 // Ativa ajuste de permissoes separadas
 import('./permissions-split-fix.js?v=2').catch(function(e){console.error('Erro ao carregar permissoes separadas', e);});
 
-// Melhorias solicitadas: telefone do aluno, historico com aulas perdidas, filtro de modulos e modal premium
+// Melhorias solicitadas: telefone do aluno, historico com aulas perdidas e filtro de modulos
 import('./iv-custom-improvements.js?v=1').catch(function(e){console.error('Erro ao carregar melhorias personalizadas do IV', e);});
 
 // Ajuste fino: rotulo Telefone e coluna na ordem Nome -> Telefone
 import('./iv-phone-column-order-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste da coluna telefone', e);});
 
-// Ajuste visual: botoes do link e aulas perdidas compactas em sanfona premium
+// Ajuste visual: botoes do link e aulas perdidas compactas em sanfona
 import('./iv-report-compact-ui-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste compacto dos relatorios', e);});
 
 // Ajustes gerais: tabela de alunos, telefone, relatorio de retencao e cabecalho de presenca
@@ -22,14 +22,14 @@ import('./iv-final-retention-history-login-teams.js?v=1').catch(function(e){cons
 // Pesquisa sem diferenciar maiusculas, minusculas e acentos nas telas Alunos e Presenca
 import('./iv-search-case-insensitive-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste de pesquisa sem diferenciar letras', e);});
 
-// Historico de um Vencedor: trajetoria completa com presencas, faltas e sanfona premium de aulas perdidas
+// Historico de um Vencedor: trajetoria completa com presencas, faltas e sanfona de aulas perdidas
 import('./iv-history-trajectory-accordion-fix.js?v=2').catch(function(e){console.error('Erro ao carregar historico de trajetoria com sanfona', e);});
 
 // Layout mobile proprio: dashboard e menu
 import('./iv-mobile-dashboard-menu.js?v=1').catch(function(e){console.error('Erro ao carregar layout mobile de dashboard e menu', e);});
 
-// Menu mobile hamburger premium
+// Menu mobile hamburger
 import('./iv-mobile-hamburger-menu-fix.js?v=1').catch(function(e){console.error('Erro ao carregar menu hamburger mobile', e);});
 
-// Pagina Alunos mobile premium compacta com sanfona
-import('./iv-mobile-students-page.js?v=3').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
+// Pagina Alunos mobile compacta com sanfona
+import('./iv-mobile-students-page.js?v=4').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
