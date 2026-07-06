@@ -18,3 +18,6 @@ import('./iv-student-rules-modal-fix.js?v=1').catch(function(e){console.error('E
 
 // Correcao final: retencao, historico sem botao Ver, login sem flash e tabela de equipes compacta
 import('./iv-final-retention-history-login-teams.js?v=1').catch(function(e){console.error('Erro ao carregar correcao final de retencao/historico/login/equipes', e);});
+
+// Pesquisa sem diferenciar maiusculas, minusculas e acentos nas telas Alunos e Presenca
+import('./iv-search-case-insensitive-fix.js?v=1').catch(function(e){console.error('Erro ao carregar ajuste de pesquisa sem diferenciar letras', e);});
