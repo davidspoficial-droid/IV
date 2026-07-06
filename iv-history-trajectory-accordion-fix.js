@@ -1,4 +1,4 @@
-// IV - restaura o Historico de um Vencedor com trajetoria completa e sanfona de aulas perdidas
+// IV - Historico de um Vencedor V2: trajetoria completa + sanfona premium de aulas perdidas
 (function(){
   'use strict';
 
@@ -38,13 +38,13 @@
 
   function turmaNome(turma){
     if(turma === 'quinta') return 'Quinta-feira';
-    if(turma === 'sabado') return 'Sabado';
+    if(turma === 'sabado') return 'Sábado';
     return 'Sem turma';
   }
 
   function labelAula(aula){
     if(aula === 'INAU') return 'Aula Inaugural';
-    if(aula === 'AP') return 'Apresentacao';
+    if(aula === 'AP') return 'Apresentação';
     return pad2(aula);
   }
 
@@ -87,9 +87,9 @@
       });
     }
 
-    var status = atual > modulo ? 'Concluido' : atual === modulo ? 'Modulo atual' : 'Proximo modulo';
+    var status = atual > modulo ? 'Concluído' : atual === modulo ? 'Módulo atual' : 'Próximo módulo';
     var pct = aulasRealizadas ? Math.round((pres / aulasRealizadas) * 100) : 0;
-    return {modulo:modulo, nome:(mod && mod.nome) || (modulo + 'º Modulo'), status:status, previsto:previsto, realizadas:aulasRealizadas, pres:pres, faltas:faltas, pct:pct, perdidas:perdidas};
+    return {modulo:modulo, nome:(mod && mod.nome) || (modulo + 'º Módulo'), status:status, previsto:previsto, realizadas:aulasRealizadas, pres:pres, faltas:faltas, pct:pct, perdidas:perdidas};
   }
 
   function agruparPerdidas(dadosModulos){
@@ -122,20 +122,20 @@
       var totalPrevistas = dados.reduce(function(s,d){ return s + d.previsto; }, 0);
       var pctGeral = totalRealizadas ? Math.round(totalPres / totalRealizadas * 100) : 0;
       var atual = parseInt(aluno.modulo || '1', 10);
-      var nomeAtual = (mods[atual] && mods[atual].nome) || (atual + 'º Modulo');
+      var nomeAtual = (mods[atual] && mods[atual].nome) || (atual + 'º Módulo');
       var perdidasHTML = agruparPerdidas(dados);
-      var acc = perdidasHTML ? '<details class="accordion"><summary><span class="acc-icon">✦</span><span>Aulas perdidas do aluno</span><span class="chev">⌄</span></summary><div class="miss-body">' + perdidasHTML + '</div></details>' : '<span class="ok">✓ Nenhuma aula perdida registrada ate agora</span>';
+      var acc = perdidasHTML ? '<details class="accordion"><summary><span class="acc-icon">✦</span><span>Aulas perdidas do aluno</span><span class="chev">⌄</span></summary><div class="miss-body">' + perdidasHTML + '</div></details>' : '<span class="ok">✓ Nenhuma aula perdida registrada até agora</span>';
 
       var rota = dados.map(function(d){
-        return '<div class="step"><h3>' + esc(d.nome) + '</h3><span class="status">' + esc(d.status) + '</span><div class="bar"><div class="fill" style="--w:' + d.pct + '%"></div></div><div class="mini"><span>Presencas</span><strong class="tag g">' + d.pres + '</strong></div><div class="mini"><span>Faltas</span><strong class="tag r">' + d.faltas + '</strong></div><div class="mini"><span>Aulas realizadas</span><strong class="tag b">' + d.realizadas + '/' + d.previsto + '</strong></div><div class="mini"><span>Aproveitamento</span><strong>' + d.pct + '%</strong></div></div>';
+        return '<div class="step"><h3>' + esc(d.nome) + '</h3><span class="status">' + esc(d.status) + '</span><div class="bar"><div class="fill" style="--w:' + d.pct + '%"></div></div><div class="mini"><span>Presenças</span><strong class="tag g">' + d.pres + '</strong></div><div class="mini"><span>Faltas</span><strong class="tag r">' + d.faltas + '</strong></div><div class="mini"><span>Aulas realizadas</span><strong class="tag b">' + d.realizadas + '/' + d.previsto + '</strong></div><div class="mini"><span>Aproveitamento</span><strong>' + d.pct + '%</strong></div></div>';
       }).join('');
 
-      return '<article class="student"><div class="student-top"><div><div class="name">' + esc(aluno.nome || '—') + '</div><div class="meta">' + esc(equipeNome(aluno)) + ' · ' + esc(turmaNome(aluno.turma)) + ' · Modulo atual: ' + esc(nomeAtual) + '</div></div><span class="pill">Trajetoria completa</span></div><div class="kpis"><div class="kpi" style="--c:#3EC97A"><div class="num">' + totalPres + '</div><div class="txt">Presencas desde o inicio</div></div><div class="kpi" style="--c:#E05555"><div class="num">' + totalFaltas + '</div><div class="txt">Faltas desde o inicio</div></div><div class="kpi" style="--c:#7EC8F0"><div class="num">' + totalRealizadas + '/' + totalPrevistas + '</div><div class="txt">Aulas realizadas/previstas</div></div><div class="kpi" style="--c:#9B59B6"><div class="num">' + pctGeral + '%</div><div class="txt">Presenca geral</div></div></div><div class="route">' + rota + '</div>' + acc + '</article>';
+      return '<article class="student"><div class="student-top"><div><div class="name">' + esc(aluno.nome || '—') + '</div><div class="meta">' + esc(equipeNome(aluno)) + ' · ' + esc(turmaNome(aluno.turma)) + ' · Módulo atual: ' + esc(nomeAtual) + '</div></div><span class="pill">Trajetória completa</span></div><div class="kpis"><div class="kpi" style="--c:#3EC97A"><div class="num">' + totalPres + '</div><div class="txt">Presenças desde o início</div></div><div class="kpi" style="--c:#E05555"><div class="num">' + totalFaltas + '</div><div class="txt">Faltas desde o início</div></div><div class="kpi" style="--c:#7EC8F0"><div class="num">' + totalRealizadas + '/' + totalPrevistas + '</div><div class="txt">Aulas realizadas/previstas</div></div><div class="kpi" style="--c:#9B59B6"><div class="num">' + pctGeral + '%</div><div class="txt">Presença geral</div></div></div><div class="route">' + rota + '</div>' + acc + '</article>';
     }).join('');
 
-    if(!cards) cards = '<article class="student"><div class="name">Nenhum aluno encontrado</div><div class="meta">O filtro selecionado nao encontrou alunos.</div></article>';
+    if(!cards) cards = '<article class="student"><div class="name">Nenhum aluno encontrado</div><div class="meta">O filtro selecionado não encontrou alunos.</div></article>';
 
-    return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc(titulo) + ' - Historico de um Vencedor</title>' + cssHistorico(mobile) + '</head><body><main class="shell"><header class="hero"><div class="badge">🧭 Historico de um Vencedor</div><div class="title">' + esc(titulo) + '</div><div class="sub">Trajetoria do aluno desde o inicio do curso, passando pelo modulo atual e ate o final do ultimo modulo. Gerado em ' + dt + '.</div></header><section class="content">' + cards + '</section></main></body></html>';
+    return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc(titulo) + ' - Histórico de um Vencedor</title>' + cssHistorico(mobile) + '</head><body><main class="shell"><header class="hero"><div class="badge">🧭 Histórico de um Vencedor</div><div class="title">' + esc(titulo) + '</div><div class="sub">Trajetória do aluno desde o início do curso, passando pelo módulo atual e até o final do último módulo. Gerado em ' + dt + '.</div></header><section class="content">' + cards + '</section></main></body></html>';
   }
 
   async function salvarRelatorio(html, titulo, tipo, modulo, versao){
@@ -162,15 +162,17 @@
   }
 
   function patchGerarRelatorio(){
-    if(typeof window.gerarRelatorioLink !== 'function' || window.gerarRelatorioLink._ivTrajectoryAccordion) return;
+    if(typeof window.gerarRelatorioLink !== 'function') return;
+    if(window.gerarRelatorioLink._ivTrajectoryAccordionV2) return;
+
     var old = window.gerarRelatorioLink;
-    window.gerarRelatorioLink = async function(){
+    var novo = async function(){
       var tipo = (document.getElementById('exp-tipo') || {}).value || 'visao';
       if(tipo !== 'caminho') return old.apply(this, arguments);
       var titulo = (document.getElementById('exp-titulo') || {}).value || 'Instituto de Vencedores';
       var modulo = (document.getElementById('exp-modulo') || {}).value || 'todos';
       var versao = versaoAtual();
-      var nomeTipo = 'Historico de um Vencedor';
+      var nomeTipo = 'Histórico de um Vencedor';
       var html = htmlHistorico(titulo, modulo, versao);
       if(typeof toast === 'function') toast('Gerando link, aguarde...⏳');
       try{
@@ -182,7 +184,8 @@
         if(typeof toast === 'function') toast('Erro ao gerar link. Tente novamente.', true);
       }
     };
-    window.gerarRelatorioLink._ivTrajectoryAccordion = true;
+    novo._ivTrajectoryAccordionV2 = true;
+    window.gerarRelatorioLink = novo;
     window.gerarRelatorio = function(){ return window.gerarRelatorioLink(); };
   }
 
@@ -191,5 +194,6 @@
     setTimeout(patchGerarRelatorio, 300);
     setTimeout(patchGerarRelatorio, 900);
     setTimeout(patchGerarRelatorio, 1800);
+    setInterval(patchGerarRelatorio, 1200);
   });
 })();
