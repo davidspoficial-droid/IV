@@ -1,4 +1,4 @@
-// IV - Alunos em layout mobile proprio
+// IV - Alunos em layout mobile proprio compacto com sanfona
 (function(){
   'use strict';
 
@@ -18,11 +18,15 @@
   function dig(v){ return String(v || '').replace(/\D/g,''); }
 
   function loadCSS(){
-    if(document.getElementById('iv-mobile-students-css')) return;
+    if(document.getElementById('iv-mobile-students-css')){
+      var old = document.getElementById('iv-mobile-students-css');
+      if(old.getAttribute('href') !== './iv-mobile-students.css?v=2') old.setAttribute('href','./iv-mobile-students.css?v=2');
+      return;
+    }
     var l = document.createElement('link');
     l.id = 'iv-mobile-students-css';
     l.rel = 'stylesheet';
-    l.href = './iv-mobile-students.css?v=1';
+    l.href = './iv-mobile-students.css?v=2';
     document.head.appendChild(l);
   }
 
@@ -88,18 +92,27 @@
     var telefone = tel(a);
     var sit = a.situacao || 'ATIVO';
     var marcado = marcados.has(a.id);
+    var statusClass = stClass(sit);
     return '<article class="iv-stu-card ' + (marcado ? 'selected' : '') + '" data-id="' + esc(a.id) + '" style="--c:' + corMod(a) + '">' +
-      '<div class="iv-stu-card-head"><div class="iv-stu-avatar">' + esc(iniciais(a.nome)) + '</div><div><div class="iv-stu-name">' + esc(a.nome || '—') + '</div><div class="iv-stu-meta">Inscrição: ' + esc(a.inscricao || '—') + '</div></div><input class="iv-stu-check" type="checkbox" data-act="marcar" ' + (marcado ? 'checked' : '') + '></div>' +
-      '<div class="iv-stu-info">' +
-      '<div class="iv-stu-chip"><span>Telefone</span>' + (telefone ? '<a href="tel:' + esc(dig(telefone)) + '">' + esc(telefone) + '</a>' : '<strong class="muted">—</strong>') + '</div>' +
-      '<div class="iv-stu-chip"><span>Equipe</span><strong>' + esc(e ? e.nome : 'Sem equipe') + '</strong></div>' +
-      '<div class="iv-stu-chip"><span>Módulo</span><strong>' + esc(modName(a)) + '</strong></div>' +
-      '<div class="iv-stu-chip"><span>Turma</span><strong>' + esc(turma(a.turma)) + '</strong></div>' +
-      '<div class="iv-stu-chip"><span>Situação</span><strong><em class="iv-stu-status ' + stClass(sit) + '">' + esc(sit) + '</em></strong></div>' +
-      '<div class="iv-stu-chip"><span>ID</span><strong>#' + esc(a.id) + '</strong></div></div>' +
-      '<div class="iv-stu-card-actions"><button type="button" class="iv-stu-icon-btn edit" data-act="editar">✏️ Editar</button>' +
-      (sit !== 'DESISTENTE' ? '<button type="button" class="iv-stu-icon-btn warn" data-act="desistente">📉 Desist.</button>' : '<button type="button" class="iv-stu-icon-btn warn" data-act="reativar">↩️ Reativar</button>') +
-      '<button type="button" class="iv-stu-icon-btn red" data-act="remover">🗑️ Excluir</button></div></article>';
+      '<div class="iv-stu-compact">' +
+        '<div class="iv-stu-avatar">' + esc(iniciais(a.nome)) + '</div>' +
+        '<div><div class="iv-stu-name">' + esc(a.nome || '—') + '</div><div class="iv-stu-mini"><span class="iv-stu-mini-pill">' + esc(modName(a)) + '</span><span class="iv-stu-mini-pill status ' + statusClass + '">' + esc(sit) + '</span></div></div>' +
+        '<div class="iv-stu-right"><input class="iv-stu-check" type="checkbox" data-act="marcar" aria-label="Selecionar aluno" ' + (marcado ? 'checked' : '') + '><div class="iv-stu-card-actions">' +
+          '<button type="button" class="iv-stu-icon-btn edit" data-act="editar" title="Editar" aria-label="Editar aluno">✏️</button>' +
+          (sit !== 'DESISTENTE' ? '<button type="button" class="iv-stu-icon-btn warn" data-act="desistente" title="Marcar desistente" aria-label="Marcar desistente">📉</button>' : '<button type="button" class="iv-stu-icon-btn warn" data-act="reativar" title="Reativar" aria-label="Reativar aluno">↩️</button>') +
+          '<button type="button" class="iv-stu-icon-btn red" data-act="remover" title="Excluir" aria-label="Excluir aluno">🗑️</button></div></div>' +
+      '</div>' +
+      '<details class="iv-stu-details"><summary><span>✦ Ver informações</span><span class="chev">⌄</span></summary>' +
+        '<div class="iv-stu-info">' +
+          '<div class="iv-stu-chip"><span>Inscrição</span><strong>' + esc(a.inscricao || '—') + '</strong></div>' +
+          '<div class="iv-stu-chip"><span>Telefone</span>' + (telefone ? '<a href="tel:' + esc(dig(telefone)) + '">' + esc(telefone) + '</a>' : '<strong class="muted">—</strong>') + '</div>' +
+          '<div class="iv-stu-chip"><span>Equipe</span><strong>' + esc(e ? e.nome : 'Sem equipe') + '</strong></div>' +
+          '<div class="iv-stu-chip"><span>Turma</span><strong>' + esc(turma(a.turma)) + '</strong></div>' +
+          '<div class="iv-stu-chip"><span>Situação</span><strong><em class="iv-stu-status ' + statusClass + '">' + esc(sit) + '</em></strong></div>' +
+          '<div class="iv-stu-chip"><span>ID</span><strong>#' + esc(a.id) + '</strong></div>' +
+        '</div>' +
+      '</details>' +
+    '</article>';
   }
 
   function renderMobileAlunos(){
@@ -109,7 +122,7 @@
     var f = filtros();
     var itens = lista();
     var ativos = (db.alunos || []).filter(function(a){ return (a.situacao || 'ATIVO') === 'ATIVO'; }).length;
-    box.innerHTML = '<div class="iv-stu-hero"><div class="iv-stu-hero-top"><div><div class="iv-stu-title">Cadastro de Alunos</div><div class="iv-stu-sub">Layout mobile próprio para consultar, filtrar e atualizar alunos com mais clareza.</div></div><div class="iv-stu-count"><strong>' + itens.length + '</strong><span>Exibidos</span></div></div></div>' +
+    box.innerHTML = '<div class="iv-stu-hero"><div class="iv-stu-hero-top"><div><div class="iv-stu-title">Cadastro de Alunos</div><div class="iv-stu-sub">Cards compactos no mobile com informações extras em sanfona.</div></div><div class="iv-stu-count"><strong>' + itens.length + '</strong><span>Exibidos</span></div></div></div>' +
       '<div class="iv-stu-actions"><button type="button" class="iv-stu-btn primary" data-act="novo">+ Novo aluno</button><button type="button" class="iv-stu-btn" data-act="importar">📋 Importar</button></div>' +
       '<div class="iv-stu-actions-row"><button type="button" class="iv-stu-btn" data-act="avancar">⬆️ Avançar</button><button type="button" class="iv-stu-btn" data-act="todos">☑️ Selecionar</button><button type="button" class="iv-stu-btn danger" data-act="removerMarcados">🗑️ ' + marcados.size + '</button></div>' +
       '<div class="iv-stu-filter"><input id="iv-stu-search" class="iv-stu-search" placeholder="🔍 Buscar por nome, telefone, equipe..." value="' + esc(f.q) + '"><div class="iv-stu-filter-grid"><select id="iv-stu-equipe" class="iv-stu-select">' + optEquipes(f.eq) + '</select><select id="iv-stu-turma" class="iv-stu-select"><option value="">Todas as turmas</option><option value="quinta" ' + (f.turma === 'quinta' ? 'selected' : '') + '>Quinta-feira</option><option value="sabado" ' + (f.turma === 'sabado' ? 'selected' : '') + '>Sábado</option></select></div><div class="iv-stu-sub" style="margin-top:8px">' + ativos + ' alunos ativos no total · ' + (db.alunos || []).length + ' cadastrados</div></div>' +
