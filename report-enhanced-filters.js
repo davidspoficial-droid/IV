@@ -24,3 +24,6 @@ import('./iv-search-case-insensitive-fix.js?v=1').catch(function(e){console.erro
 
 // Historico de um Vencedor: trajetoria completa com presencas, faltas e sanfona premium de aulas perdidas
 import('./iv-history-trajectory-accordion-fix.js?v=2').catch(function(e){console.error('Erro ao carregar historico de trajetoria com sanfona', e);});
+
+// Layout mobile proprio: dashboard e menu
+import('./iv-mobile-dashboard-menu.js?v=1').catch(function(e){console.error('Erro ao carregar layout mobile de dashboard e menu', e);});
