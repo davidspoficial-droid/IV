@@ -33,3 +33,6 @@ import('./iv-mobile-hamburger-menu-fix.js?v=1').catch(function(e){console.error(
 
 // Pagina Alunos mobile compacta com sanfona
 import('./iv-mobile-students-page.js?v=4').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
+
+// Pagina Equipes mobile
+import('./iv-mobile-teams-page.js?v=1').catch(function(e){console.error('Erro ao carregar pagina mobile de equipes', e);});
