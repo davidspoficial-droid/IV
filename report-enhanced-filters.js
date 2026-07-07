@@ -36,3 +36,6 @@ import('./iv-mobile-students-page.js?v=4').catch(function(e){console.error('Erro
 
 // Pagina Equipes mobile
 import('./iv-mobile-teams-page.js?v=1').catch(function(e){console.error('Erro ao carregar pagina mobile de equipes', e);});
+
+// Pagina Presenca mobile
+import('./iv-mobile-presence-page.js?v=1').catch(function(e){console.error('Erro ao carregar pagina mobile de presenca', e);});
