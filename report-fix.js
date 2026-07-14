@@ -21,6 +21,9 @@
 
   import('./iv-report-postprocess-v5.js?v=20260714-1')
     .then(function(){ return import('./iv-report-general-authority-v4.js?v=20260714-1'); })
+    .then(function(){
+      window.IVGenerateGeneralViewV4 = window.IVGenerateGeneralView;
+    })
     .catch(function(error){
       console.error('Erro ao carregar o painel completo da Visão Geral:', error);
     });
