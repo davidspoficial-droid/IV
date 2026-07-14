@@ -1,4 +1,5 @@
 import('./iv-revision-core.js?v=20260714-2')
+  .then(function(){ return import('./iv-report-week-selection-v7.js?v=20260714-1'); })
   .then(function(){ return import('./iv-report-postprocess-v5.js?v=20260714-2'); })
   .then(function(){ return import('./iv-report-general-authority-v4.js?v=20260714-1'); })
   .then(function(){ window.IVGenerateGeneralViewV4 = window.IVGenerateGeneralView; return import('./iv-reports-generator-v2.js?v=20260714-1'); })
