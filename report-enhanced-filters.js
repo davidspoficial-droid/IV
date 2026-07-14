@@ -64,6 +64,9 @@ import('./iv-mobile-presence-page.js?v=20260714-3').catch(function(e){console.er
 // Dashboard mobile dedicado: KPIs 3 por linha, sanfonas premium e apenas um hambúrguer visual.
 import('./iv-mobile-dashboard-premium-v2.js?v=20260714-1').catch(function(e){console.error('Erro ao carregar dashboard mobile premium v2', e);});
 
+// Relatórios por Revisão, Visão Geral em abas e experiência mobile premium.
+import('./iv-reports-review-premium.js?v=20260714-1').catch(function(e){console.error('Erro ao carregar relatórios por revisão', e);});
+
 // Revisão por aluno, tabela premium e avanço seletivo. Carregamento sequencial e sem observadores globais.
 setTimeout(function(){
   import('./iv-revision-core.js?v=20260714-1')
