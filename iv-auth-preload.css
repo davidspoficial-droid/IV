@@ -1,32 +1,19 @@
-/* IV - evita flash da tela de login durante restauracao da sessao */
+/* IV - autenticação sem tela preta durante a restauração da sessão */
 body.auth-lock #auth-screen{
-  animation:iv-auth-login-delay .95s step-end both;
+  display:flex!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  animation:iv-auth-login-in .20s ease both;
 }
+
+/* Remove a antiga cobertura de tela inteira que podia permanecer preta. */
 body.auth-lock::after{
-  content:"Validando acesso...";
-  position:fixed;
-  inset:0;
-  z-index:999998;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:
-    radial-gradient(circle at 18% 8%,rgba(47,128,237,.34),transparent 34%),
-    radial-gradient(circle at 84% 14%,rgba(34,211,238,.18),transparent 32%),
-    linear-gradient(145deg,#020611 0%,#07111F 48%,#030712 100%);
-  color:#BFEAFF;
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:.10em;
-  text-transform:uppercase;
-  pointer-events:none;
-  animation:iv-auth-cover .95s ease forwards;
+  content:none!important;
+  display:none!important;
 }
-@keyframes iv-auth-login-delay{
-  0%,99%{opacity:0;visibility:hidden;pointer-events:none;}
-  100%{opacity:1;visibility:visible;pointer-events:auto;}
-}
-@keyframes iv-auth-cover{
-  0%,78%{opacity:1;visibility:visible;}
-  100%{opacity:0;visibility:hidden;}
+
+@keyframes iv-auth-login-in{
+  from{opacity:.86;}
+  to{opacity:1;}
 }
