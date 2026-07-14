@@ -21,7 +21,8 @@
     return many(['./iv-custom-improvements.js?v=20260714-2','./iv-report-compact-ui-fix.js?v=20260714-2','./iv-system-adjustments-202607.js?v=20260714-3','./iv-final-retention-history-login-teams.js?v=20260714-2','./iv-history-trajectory-accordion-fix.js?v=20260714-3'])
       .then(function(){return once('./iv-revision-core.js?v=20260714-2');})
       .then(function(){return once('./iv-reports-review-premium.js?v=20260714-2');})
-      .then(function(){return once('./iv-report-page-cleanup.js?v=20260714-1');});
+      .then(function(){return once('./iv-report-page-cleanup.js?v=20260714-1');})
+      .then(function(){return once('./iv-report-review-enhancer.js?v=20260714-1');});
   }
   function dashboard(){if(!mobile.matches)return Promise.resolve();return many(['./iv-mobile-hamburger-menu-fix.js?v=20260714-4','./iv-mobile-dashboard-premium-v2.js?v=20260714-2']);}
   var pages=Object.create(null);
