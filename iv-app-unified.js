@@ -56,9 +56,12 @@
       './iv-report-compact-ui-fix.js?v=20260714-2',
       './iv-system-adjustments-202607.js?v=20260714-3',
       './iv-final-retention-history-login-teams.js?v=20260714-2',
-      './iv-history-trajectory-accordion-fix.js?v=20260714-3',
-      './iv-reports-review-premium.js?v=20260714-2'
-    ]);
+      './iv-history-trajectory-accordion-fix.js?v=20260714-3'
+    ]).then(function(){
+      return importOnce('./iv-revision-core.js?v=20260714-2');
+    }).then(function(){
+      return importOnce('./iv-reports-review-premium.js?v=20260714-2');
+    });
   }
 
   function teamGroup(){
