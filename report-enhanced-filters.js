@@ -39,3 +39,5 @@ import('./iv-mobile-teams-page.js?v=1').catch(function(e){console.error('Erro ao
 
 // Pagina Presenca mobile
 import('./iv-mobile-presence-page.js?v=1').catch(function(e){console.error('Erro ao carregar pagina mobile de presenca', e);});
+
+// Recovery deploy marker 2026-07-14
