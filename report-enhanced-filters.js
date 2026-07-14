@@ -16,7 +16,8 @@
   }
 })();
 
-// Entrada única, seguida pela otimização final da navegação.
-import('./iv-app-unified.js?v=20260714-5')
-  .then(function(){ return import('./iv-navigation-speed-colors.js?v=20260714-3'); })
+// O gerador V2 é instalado primeiro e bloqueia sobrescritas dos geradores antigos.
+import('./iv-reports-generator-v2.js?v=20260714-1')
+  .then(function(){ return import('./iv-app-unified.js?v=20260714-6'); })
+  .then(function(){ return import('./iv-navigation-speed-colors.js?v=20260714-4'); })
   .catch(function(error){ console.error('Erro ao iniciar aplicação unificada do IV', error); });
