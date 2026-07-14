@@ -61,6 +61,8 @@
       return importOnce('./iv-revision-core.js?v=20260714-2');
     }).then(function(){
       return importOnce('./iv-reports-review-premium.js?v=20260714-2');
+    }).then(function(){
+      return importOnce('./iv-report-page-cleanup.js?v=20260714-1');
     });
   }
 
