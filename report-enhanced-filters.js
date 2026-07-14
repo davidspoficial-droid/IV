@@ -17,6 +17,6 @@
 })();
 
 // Única entrada dos recursos adicionais do sistema.
-import('./iv-app-unified.js?v=20260714-1').catch(function(error){
+import('./iv-app-unified.js?v=20260714-2').catch(function(error){
   console.error('Erro ao iniciar aplicação unificada do IV', error);
 });
