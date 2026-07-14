@@ -19,7 +19,7 @@
     return webButton && webButton.classList.contains('active') ? 'web' : reportVersion;
   };
 
-  import('./iv-report-general-authority.js?v=20260714-2').catch(function(error){
+  import('./iv-report-general-authority.js?v=20260714-3').catch(function(error){
     console.error('Erro ao carregar o gerador definitivo da Visão Geral:', error);
   });
 })();
