@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Instituto de Vencedores">
+  <defs>
+    <linearGradient id="bg" x1="72" y1="54" x2="440" y2="458" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17365E"/>
+      <stop offset="0.52" stop-color="#0B1C35"/>
+      <stop offset="1" stop-color="#050A14"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="148" y1="126" x2="374" y2="386" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.45" stop-color="#BFEAFF"/>
+      <stop offset="1" stop-color="#4A90D9"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#7EC8F0" stroke-opacity=".22" stroke-width="8"/>
+  <path d="M145 150h66v212h-66z" fill="url(#mark)"/>
+  <path d="M238 150h70l55 137 55-137h70L395 362h-65z" fill="url(#mark)" transform="translate(-50 0)"/>
+</svg>
