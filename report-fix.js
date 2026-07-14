@@ -19,7 +19,7 @@
     return webButton && webButton.classList.contains('active') ? 'web' : reportVersion;
   };
 
-  import('./iv-report-postprocess-v5.js?v=20260714-1')
+  import('./iv-report-postprocess-v5.js?v=20260714-2')
     .then(function(){ return import('./iv-report-general-authority-v4.js?v=20260714-1'); })
     .then(function(){
       window.IVGenerateGeneralViewV4 = window.IVGenerateGeneralView;
