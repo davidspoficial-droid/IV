@@ -19,7 +19,9 @@
     return webButton && webButton.classList.contains('active') ? 'web' : reportVersion;
   };
 
-  import('./iv-report-general-authority-v4.js?v=20260714-1').catch(function(error){
-    console.error('Erro ao carregar o painel completo da Visão Geral:', error);
-  });
+  import('./iv-report-postprocess-v5.js?v=20260714-1')
+    .then(function(){ return import('./iv-report-general-authority-v4.js?v=20260714-1'); })
+    .catch(function(error){
+      console.error('Erro ao carregar o painel completo da Visão Geral:', error);
+    });
 })();
