@@ -1,19 +1,10 @@
-/* IV - autenticação sem tela preta durante a restauração da sessão */
-body.auth-lock #auth-screen{
-  display:flex!important;
-  opacity:1!important;
-  visibility:visible!important;
-  pointer-events:auto!important;
-  animation:iv-auth-login-in .20s ease both;
-}
-
-/* Remove a antiga cobertura de tela inteira que podia permanecer preta. */
-body.auth-lock::after{
-  content:none!important;
-  display:none!important;
-}
-
-@keyframes iv-auth-login-in{
-  from{opacity:.86;}
-  to{opacity:1;}
-}
+/* IV - protege o primeiro desenho durante a restauração da sessão */
+body.auth-lock:not(.iv-auth-resolved) #auth-screen{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+body.auth-lock:not(.iv-auth-resolved)::before{content:""!important;display:block!important;position:fixed!important;inset:0!important;z-index:1000000!important;background:radial-gradient(circle farthest-corner at center,#3C4B57 0%,#1C262B 100%)!important;pointer-events:auto!important}
+body.auth-lock:not(.iv-auth-resolved)::after{content:""!important;display:block!important;position:fixed!important;left:50%!important;top:50%!important;width:58px!important;height:58px!important;margin:-29px 0 0 -29px!important;z-index:1000001!important;border-radius:50%!important;border:3px solid rgba(239,239,250,.20)!important;border-top-color:#EFEFFA!important;border-right-color:#BFEAFF!important;box-shadow:0 0 28px rgba(126,200,240,.18)!important;animation:ivAuthPreloadSpin .8s linear infinite!important;pointer-events:none!important}
+body.auth-lock.iv-auth-validating::before,body.auth-lock.iv-auth-validating::after{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+body.auth-lock.iv-auth-resolved.iv-auth-guest #auth-screen{display:flex!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;animation:ivAuthLoginIn .20s ease both}
+body.auth-lock.iv-auth-resolved:not(.iv-auth-guest) #auth-screen{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+@keyframes ivAuthPreloadSpin{to{transform:rotate(360deg)}}
+@keyframes ivAuthLoginIn{from{opacity:.86}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){body.auth-lock:not(.iv-auth-resolved)::after{animation-duration:1.8s!important}}
