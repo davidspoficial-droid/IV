@@ -40,4 +40,16 @@ import('./iv-mobile-teams-page.js?v=20260714-3').catch(function(e){console.error
 // Pagina Presenca mobile
 import('./iv-mobile-presence-page.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar pagina mobile de presenca', e);});
 
+// Revisão por aluno, tabela premium e avanço seletivo. Carregamento sequencial e sem observadores globais.
+setTimeout(function(){
+  import('./iv-revision-core.js?v=20260714-1')
+    .then(function(){
+      return Promise.all([
+        import('./iv-student-table-premium.js?v=20260714-1'),
+        import('./iv-advance-selective.js?v=20260714-1')
+      ]);
+    })
+    .catch(function(e){console.error('Erro ao carregar melhorias seguras de alunos e revisões', e);});
+},1200);
+
 // Recovery deploy marker 2026-07-14
