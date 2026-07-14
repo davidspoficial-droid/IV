@@ -2,7 +2,7 @@
   "name": "Instituto de Vencedores — Gestão",
   "short_name": "IV Gestão",
   "description": "Sistema de gestão de alunos, equipes, presença e relatórios do Instituto de Vencedores.",
-  "start_url": "./index.html?v=logo4",
+  "start_url": "./index.html?v=logo5",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -11,9 +11,9 @@
   "lang": "pt-BR",
   "icons": [
     {
-      "src": "./iv-icon.svg?v=logo4",
+      "src": "./IV.png?v=logo5",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     }
   ]
