@@ -1,5 +1,5 @@
 @import url("./mobile-logout-fix.css?v=1");
-@import url("./iv-auth-preload.css?v=1");
+@import url("./iv-auth-preload.css?v=2");
 
 /* IV — mobile premium dedicado + histórico administrativo */
 
@@ -59,3 +59,4 @@
   .main-nav::before{content:"Menu";position:absolute;top:18px;left:16px;right:16px;height:38px;display:flex;align-items:center;color:#F6FBFF;font-size:18px;font-weight:900;letter-spacing:.03em;border-bottom:1px solid #1E2E4A;padding-bottom:12px;}
   body.mobile-menu-open .main-nav{transform:translateX(0)!important;}
   body:not(.mobile-menu-open) .main-nav{transform:translateX(-112%)!important;}
+}
