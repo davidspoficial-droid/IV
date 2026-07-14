@@ -88,11 +88,11 @@
     init();
     window.setTimeout(init, 500);
     window.setTimeout(init, 1500);
-    // Carrega por último para estabilizar a tabela e o modal depois dos demais módulos.
+    // A camada final possui tentativas próprias, então pode iniciar logo após os módulos principais.
     window.setTimeout(function(){
       import('./iv-student-advance-stability.js?v=20260714-1').catch(function(error){
         console.error('Erro ao carregar estabilidade de alunos e avanço', error);
       });
-    }, 1900);
+    }, 250);
   });
 })();
