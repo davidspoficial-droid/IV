@@ -17,6 +17,6 @@
 })();
 
 // Entrada única, seguida pela otimização final da navegação.
-import('./iv-app-unified.js?v=20260714-2')
-  .then(function(){ return import('./iv-navigation-speed-colors.js?v=20260714-1'); })
+import('./iv-app-unified.js?v=20260714-3')
+  .then(function(){ return import('./iv-navigation-speed-colors.js?v=20260714-2'); })
   .catch(function(error){ console.error('Erro ao iniciar aplicação unificada do IV', error); });
