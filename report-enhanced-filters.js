@@ -16,6 +16,57 @@
   }
 })();
 
+// Modal de aluno mais amplo no modo web, sem criar outro arquivo ou outra requisição.
+(function(){
+  if(document.getElementById('iv-student-modal-web-size-style')) return;
+  var style=document.createElement('style');
+  style.id='iv-student-modal-web-size-style';
+  style.textContent=`
+    @media(min-width:821px){
+      #modal-aluno{padding:24px!important}
+      #modal-aluno .modal{
+        width:min(920px,calc(100vw - 56px))!important;
+        max-width:920px!important;
+        max-height:90vh!important;
+        overflow-y:auto!important;
+        overflow-x:hidden!important;
+        padding:26px 28px!important;
+        box-sizing:border-box!important;
+      }
+      #modal-aluno .form-row{
+        width:100%!important;
+        max-width:100%!important;
+        gap:14px!important;
+        box-sizing:border-box!important;
+      }
+      #modal-aluno .form-row:first-of-type{
+        grid-template-columns:minmax(0,1.7fr) minmax(190px,.65fr)!important;
+      }
+      #modal-aluno .form-row.tri{
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+      }
+      #modal-aluno .form-row>div{min-width:0!important}
+      #modal-aluno input,
+      #modal-aluno select{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        box-sizing:border-box!important;
+      }
+      #modal-aluno #al-nome{
+        font-size:15px!important;
+        padding-left:14px!important;
+        padding-right:14px!important;
+      }
+      #modal-aluno .modal-title{font-size:21px!important;margin-bottom:18px!important}
+    }
+    @media(min-width:821px) and (max-width:980px){
+      #modal-aluno .modal{width:calc(100vw - 34px)!important;padding:22px!important}
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
 // Acabamento visual e controle seguro do carregamento/autenticação
 import('./iv-ui-auth-polish.js?v=20260714-1').catch(function(e){console.error('Erro ao carregar acabamento da autenticação', e);});
 
