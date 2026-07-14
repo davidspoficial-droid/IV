@@ -74,7 +74,7 @@ setTimeout(function(){
       return Promise.all([
         import('./iv-student-table-premium.js?v=20260714-1'),
         import('./iv-student-selection-ui-fix.js?v=20260714-1'),
-        import('./iv-advance-selective.js?v=20260714-1')
+        import('./iv-advance-selective.js?v=20260714-2')
       ]);
     })
     .catch(function(e){console.error('Erro ao carregar melhorias seguras de alunos e revisões', e);});
