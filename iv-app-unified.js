@@ -147,7 +147,7 @@
 
   function loadBase(){
     var files = [
-      './iv-ui-auth-polish.js?v=20260714-2',
+      './iv-ui-auth-polish.js?v=20260714-3',
       './permissions-split-fix.js?v=3'
     ];
     if(mobile.matches) files.push('./iv-mobile-hamburger-menu-fix.js?v=20260714-4');
