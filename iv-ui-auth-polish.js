@@ -22,10 +22,6 @@
       authForm = document.createElement('form');
       authForm.id = 'iv-auth-form';
       authForm.style.display = 'none';
-      authForm.addEventListener('submit', function(ev){
-        ev.preventDefault();
-        if(typeof window.entrarSistema === 'function') window.entrarSistema();
-      });
       document.body.appendChild(authForm);
     }
 
@@ -34,10 +30,11 @@
       if(field) field.setAttribute('form','iv-auth-form');
     });
 
+    // Mantém o onclick original como única ação para não disparar o login duas vezes.
     var enter = document.querySelector('#auth-screen .auth-enter-btn');
     if(enter){
-      enter.type = 'submit';
-      enter.setAttribute('form','iv-auth-form');
+      enter.type = 'button';
+      enter.removeAttribute('form');
     }
 
     var userForm = document.getElementById('iv-user-password-form');
