@@ -16,7 +16,7 @@
   }
 })();
 
-// Única entrada dos recursos adicionais do sistema.
-import('./iv-app-unified.js?v=20260714-2').catch(function(error){
-  console.error('Erro ao iniciar aplicação unificada do IV', error);
-});
+// Entrada única, seguida pela otimização final da navegação.
+import('./iv-app-unified.js?v=20260714-2')
+  .then(function(){ return import('./iv-navigation-speed-colors.js?v=20260714-1'); })
+  .catch(function(error){ console.error('Erro ao iniciar aplicação unificada do IV', error); });
