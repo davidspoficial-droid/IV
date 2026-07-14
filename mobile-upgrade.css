@@ -1,6 +1,9 @@
 @import url("./mobile-logout-fix.css?v=1");
 @import url("./iv-auth-preload.css?v=3");
 
+/* Proteção mínima no primeiro CSS: o login não participa da pintura inicial. */
+body.auth-lock:not(.iv-auth-resolved) #auth-screen{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;}
+
 /* IV — mobile premium dedicado + histórico administrativo */
 
 .login-password-eye,
@@ -56,7 +59,7 @@
   .header>.auth-logout{display:none!important;}
 
   .main-nav{position:fixed!important;top:0!important;left:0!important;bottom:0!important;width:min(318px,84vw)!important;height:100dvh!important;z-index:8000!important;padding:74px 14px 14px!important;display:flex!important;flex-direction:column!important;gap:8px!important;overflow-y:auto!important;border-right:1px solid #1E2E4A!important;border-bottom:0!important;background:linear-gradient(180deg,#071020,#050A14)!important;box-shadow:20px 0 44px rgba(0,0,0,.58)!important;transform:translateX(-112%)!important;transition:transform .24s ease!important;}
-  .main-nav::before{content:"Menu";position:absolute;top:18px;left:16px;right:16px;height:38px;display:flex;align-items:center;color:#F6FBFF;font-size:18px;font-weight:900;letter-spacing:.03em;border-bottom:1px solid #1E2E4A;padding-bottom:12px;}
+  .main-nav::before{content:"Menu";position:absolute;top:18px;left:16px;right:16px;height:38px;display:flex!important;align-items:center!important;color:#F6FBFF!important;font-size:18px!important;font-weight:900!important;letter-spacing:.03em!important;border-bottom:1px solid #1E2E4A!important;padding-bottom:12px!important;}
   body.mobile-menu-open .main-nav{transform:translateX(0)!important;}
   body:not(.mobile-menu-open) .main-nav{transform:translateX(-112%)!important;}
 }
