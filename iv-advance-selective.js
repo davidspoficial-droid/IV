@@ -78,7 +78,7 @@
         '<div class="iv-advance-top">' +
           '<div><label>Filtrar por Revisão</label><select id="iv-advance-review"></select></div>' +
           '<div><label>Filtrar por Turma</label><select id="iv-advance-turma"></select></div>' +
-          '<button type="button" class="btn btn-ghost btn-sm" id="iv-advance-all">Selecionar todos</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" id="iv-advance-all">Selecionar tudo</button>' +
         '</div>' +
         '<div id="iv-advance-list" class="iv-advance-list"></div>' +
         '<div id="iv-advance-count" class="iv-advance-count"></div>';
@@ -160,7 +160,16 @@
     var selectedCount = document.querySelectorAll('.iv-advance-check:checked').length;
     var total = document.querySelectorAll('.iv-advance-check').length;
     var label = document.getElementById('iv-advance-count');
+    var button = document.getElementById('iv-advance-all');
+
     if(label) label.textContent = selectedCount+' de '+total+' aluno(s) selecionado(s)';
+
+    if(button){
+      button.disabled = total === 0;
+      button.textContent = total > 0 && selectedCount === total ? 'Limpar seleção' : 'Selecionar tudo';
+      button.setAttribute('aria-label', button.textContent);
+      button.title = button.textContent;
+    }
   }
 
   function render(reset){
