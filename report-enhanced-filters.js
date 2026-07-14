@@ -58,8 +58,10 @@ import('./iv-mobile-students-page.js?v=20260714-3').catch(function(e){console.er
 // Pagina Equipes mobile
 import('./iv-mobile-teams-page.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar pagina mobile de equipes', e);});
 
-// Pagina Presenca mobile
-import('./iv-mobile-presence-page.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar pagina mobile de presenca', e);});
+// Filtros estáveis de Presença e página mobile sincronizada
+import('./iv-presence-filters-stable.js?v=20260714-1')
+  .then(function(){ return import('./iv-mobile-presence-page.js?v=20260714-4'); })
+  .catch(function(e){console.error('Erro ao carregar filtros e página mobile de presença', e);});
 
 // Dashboard mobile dedicado: KPIs 3 por linha, sanfonas premium e apenas um hambúrguer visual.
 import('./iv-mobile-dashboard-premium-v2.js?v=20260714-1').catch(function(e){console.error('Erro ao carregar dashboard mobile premium v2', e);});
