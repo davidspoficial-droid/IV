@@ -30,7 +30,6 @@
       if(field) field.setAttribute('form','iv-auth-form');
     });
 
-    // Mantém o onclick original como única ação para não disparar o login duas vezes.
     var enter = document.querySelector('#auth-screen .auth-enter-btn');
     if(enter){
       enter.type = 'button';
@@ -80,10 +79,17 @@
     }
   }
 
+  function resolveAuth(user){
+    if(!document.body) return;
+    document.body.classList.add('iv-auth-resolved');
+    document.body.classList.toggle('iv-auth-guest', !user);
+    finishLoading();
+  }
+
   function listenAuth(){
     var attach = function(){
       if(!window._firebase || typeof window._firebase.onAuth !== 'function') return false;
-      window._firebase.onAuth(function(){ finishLoading(); });
+      window._firebase.onAuth(function(user){ resolveAuth(user); });
       return true;
     };
 
@@ -91,8 +97,9 @@
       document.addEventListener('firebase-ready', function(){ attach(); }, {once:true});
     }
 
-    // Segurança: nunca mantém a interface coberta indefinidamente se o serviço externo falhar.
-    window.setTimeout(finishLoading, 10000);
+    window.setTimeout(function(){
+      if(document.body && !document.body.classList.contains('iv-auth-resolved')) resolveAuth(null);
+    }, 10000);
   }
 
   function ensureStyle(){
