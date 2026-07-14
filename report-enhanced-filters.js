@@ -25,19 +25,19 @@ import('./iv-search-case-insensitive-fix.js?v=1').catch(function(e){console.erro
 // Historico de um Vencedor: trajetoria completa com presencas, faltas e sanfona de aulas perdidas
 import('./iv-history-trajectory-accordion-fix.js?v=2').catch(function(e){console.error('Erro ao carregar historico de trajetoria com sanfona', e);});
 
-// Layout mobile proprio: dashboard e menu
-import('./iv-mobile-dashboard-menu.js?v=1').catch(function(e){console.error('Erro ao carregar layout mobile de dashboard e menu', e);});
+// Dashboard mobile seguro: somente titulo premium, sem esconder o conteudo original
+import('./iv-mobile-dashboard-menu.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar titulo mobile do dashboard', e);});
 
 // Menu mobile hamburger
-import('./iv-mobile-hamburger-menu-fix.js?v=1').catch(function(e){console.error('Erro ao carregar menu hamburger mobile', e);});
+import('./iv-mobile-hamburger-menu-fix.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar menu hamburger mobile', e);});
 
 // Pagina Alunos mobile compacta com sanfona
-import('./iv-mobile-students-page.js?v=4').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
+import('./iv-mobile-students-page.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar pagina mobile de alunos', e);});
 
 // Pagina Equipes mobile
-import('./iv-mobile-teams-page.js?v=1').catch(function(e){console.error('Erro ao carregar pagina mobile de equipes', e);});
+import('./iv-mobile-teams-page.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar pagina mobile de equipes', e);});
 
 // Pagina Presenca mobile
-import('./iv-mobile-presence-page.js?v=1').catch(function(e){console.error('Erro ao carregar pagina mobile de presenca', e);});
+import('./iv-mobile-presence-page.js?v=20260714-3').catch(function(e){console.error('Erro ao carregar pagina mobile de presenca', e);});
 
 // Recovery deploy marker 2026-07-14
