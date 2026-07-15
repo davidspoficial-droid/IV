@@ -1,4 +1,4 @@
-// IV - filtros adicionais da tabela de alunos
+// IV - filtros persistentes de módulo e situação da tabela de alunos
 (function(){
   'use strict';
   if(window.__IV_STUDENT_EXTRA_FILTERS__) return;
@@ -6,6 +6,7 @@
 
   var tableObserver = null;
   var observedBody = null;
+  var filterState = {module:'', status:'', initialized:false};
 
   function db(){
     try{return typeof DB !== 'undefined' ? DB : null;}catch(error){return null;}
@@ -13,6 +14,26 @@
 
   function situation(student){
     return String(student && student.situacao || 'ATIVO').trim().toUpperCase();
+  }
+
+  function controls(){
+    return {
+      module:document.getElementById('filtro-modulo-aluno'),
+      status:document.getElementById('filtro-situacao-aluno')
+    };
+  }
+
+  function rememberState(){
+    var fields = controls();
+    if(fields.module) filterState.module = fields.module.value || '';
+    if(fields.status) filterState.status = fields.status.value || '';
+    filterState.initialized = true;
+  }
+
+  function restoreState(){
+    var fields = controls();
+    if(fields.module && fields.module.value !== filterState.module) fields.module.value = filterState.module;
+    if(fields.status && fields.status.value !== filterState.status) fields.status.value = filterState.status;
   }
 
   function addControls(){
@@ -38,6 +59,9 @@
       statusSelect.innerHTML = '<option value="">Todas as situações</option><option value="ATIVO">Ativos</option><option value="DESISTENTE">Desistentes</option><option value="INATIVO">Inativos</option>';
       bar.appendChild(statusSelect);
     }
+
+    if(!filterState.initialized) rememberState();
+    else restoreState();
     return true;
   }
 
@@ -56,11 +80,10 @@
     var body = document.getElementById('tb-alunos');
     if(!data || !body) return;
     observeBody();
+    restoreState();
 
-    var moduleSelect = document.getElementById('filtro-modulo-aluno');
-    var statusSelect = document.getElementById('filtro-situacao-aluno');
-    var moduleValue = moduleSelect ? moduleSelect.value : '';
-    var statusValue = statusSelect ? statusSelect.value : '';
+    var moduleValue = filterState.module;
+    var statusValue = filterState.status;
     var byId = Object.create(null);
     (data.alunos || []).forEach(function(student){byId[String(student.id)] = student;});
 
@@ -96,10 +119,9 @@
   }
 
   function schedule(){
-    window.setTimeout(apply,0);
-    window.setTimeout(apply,90);
-    window.setTimeout(apply,220);
-    window.setTimeout(apply,650);
+    [0,80,180,350,700,1200,1900].forEach(function(delay){
+      window.setTimeout(function(){restoreState();apply();},delay);
+    });
   }
 
   function observeBody(){
@@ -117,13 +139,42 @@
     tableObserver.observe(body,{childList:true});
   }
 
-  function patch(){
+  function patchRender(){
     var current = window.renderAlunos;
     if(typeof current !== 'function' || current._ivExtraStudentFilters) return;
-    var wrapped = function(){var result=current.apply(this,arguments);schedule();return result;};
+    var wrapped = function(){
+      var result = current.apply(this,arguments);
+      schedule();
+      return result;
+    };
     wrapped._ivExtraStudentFilters = true;
     if(current._ivStudentPremium) wrapped._ivStudentPremium = current._ivStudentPremium;
     window.renderAlunos = wrapped;
+  }
+
+  function patchSaveAction(name){
+    var current = window[name];
+    if(typeof current !== 'function' || current._ivPersistentStudentFilters) return;
+    var wrapped = function(){
+      rememberState();
+      var result;
+      try{
+        result = current.apply(this,arguments);
+      }finally{
+        schedule();
+      }
+      if(result && typeof result.finally === 'function') result.finally(schedule);
+      return result;
+    };
+    wrapped._ivPersistentStudentFilters = true;
+    window[name] = wrapped;
+  }
+
+  function patchSaveActions(){
+    patchSaveAction('salvarAluno');
+    patchSaveAction('importarAlunos');
+    patchSaveAction('marcarDesistente');
+    patchSaveAction('reativarAluno');
   }
 
   function style(){
@@ -139,15 +190,31 @@
     document.documentElement.dataset.ivExtraStudentFilters = '1';
     document.addEventListener('change',function(event){
       if(!event.target) return;
-      if(event.target.id === 'filtro-modulo-aluno' || event.target.id === 'filtro-situacao-aluno') apply();
-      else if(event.target.id === 'filtro-equipe' || event.target.id === 'filtro-turma' || event.target.id === 'filtro-revisao') schedule();
+      if(event.target.id === 'filtro-modulo-aluno' || event.target.id === 'filtro-situacao-aluno'){
+        rememberState();
+        apply();
+      }else if(event.target.id === 'filtro-equipe' || event.target.id === 'filtro-turma' || event.target.id === 'filtro-revisao'){
+        schedule();
+      }
     },true);
-    document.addEventListener('input',function(event){if(event.target && event.target.id === 'busca-aluno') schedule();},true);
+    document.addEventListener('input',function(event){
+      if(event.target && event.target.id === 'busca-aluno') schedule();
+    },true);
   }
 
-  function init(){style();addControls();observeBody();patch();bind();schedule();}
+  function init(){
+    style();
+    addControls();
+    observeBody();
+    patchRender();
+    patchSaveActions();
+    bind();
+    schedule();
+  }
+
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
-  window.setTimeout(init,600);
-  window.setTimeout(init,1600);
+  window.setTimeout(init,500);
+  window.setTimeout(init,1300);
+  window.setTimeout(init,2400);
 })();
