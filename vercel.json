@@ -73,6 +73,30 @@
       ]
     },
     {
+      "source": "/iv-app-unified.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/iv-presence-filters-stable.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/iv-presence-real-absence-v2.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/iv-mobile-presence-page.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-revision-year-min-2026.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
