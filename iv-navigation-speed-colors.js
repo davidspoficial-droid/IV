@@ -21,7 +21,11 @@
         return once('./iv-student-table-authority.js?v=20260715-1');
       });
   }
-  function presence(){return once('./iv-presence-filters-stable.js?v=20260714-2').then(function(){if(mobile.matches)return once('./iv-mobile-presence-page.js?v=20260714-5');});}
+  function presence(){
+    return once('./iv-presence-filters-stable.js?v=20260714-2')
+      .then(function(){return once('./iv-presence-real-absence-v2.js?v=20260715-2');})
+      .then(function(){if(mobile.matches)return once('./iv-mobile-presence-page.js?v=20260714-5');});
+  }
   function teams(){var f=['./iv-final-retention-history-login-teams.js?v=20260714-2'];if(mobile.matches)f.push('./iv-mobile-teams-page.js?v=20260714-4');return many(f);}
   function reports(){
     return many(['./iv-custom-improvements.js?v=20260714-2','./iv-report-compact-ui-fix.js?v=20260714-2','./iv-system-adjustments-202607.js?v=20260714-3','./iv-final-retention-history-login-teams.js?v=20260714-2','./iv-history-trajectory-accordion-fix.js?v=20260714-3'])
