@@ -9,7 +9,6 @@
   function D(){try{return typeof DB!=='undefined'?DB:null}catch(e){return null}}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
   function key(id,m,w,a){try{return typeof presKey==='function'?presKey(id,m,w,a):id+'_'+m+'_'+w+'_'+a}catch(e){return id+'_'+m+'_'+w+'_'+a}}
-  function own(o,k){return Object.prototype.hasOwnProperty.call(o||{},k)}
   function sid(x){return String(x.modulo)+'|'+String(x.semana)+'|'+String(x.aula)}
   function moduleName(id){try{return MODULOS[id]&&MODULOS[id].nome?MODULOS[id].nome:id+'º Módulo'}catch(e){return id+'º Módulo'}}
   function teamName(student,db){var item=(db.equipes||[]).find(function(team){return String(team.id)===String(student.equipeId)});return item?String(item.nome||''):''}
@@ -18,7 +17,7 @@
 
   function startedMap(slots,db){
     var map=Object.create(null),pres=db.presencas||{},students=db.alunos||[];
-    slots.forEach(function(slot){map[sid(slot)]=students.some(function(student){return own(pres,key(student.id,slot.modulo,slot.semana,slot.aula))})});
+    slots.forEach(function(slot){map[sid(slot)]=students.some(function(student){return!!pres[key(student.id,slot.modulo,slot.semana,slot.aula)]})});
     return map;
   }
 
