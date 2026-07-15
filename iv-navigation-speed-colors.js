@@ -13,7 +13,7 @@
   function students(){
     return many(['./iv-custom-improvements.js?v=20260714-2','./iv-phone-column-order-fix.js?v=20260714-2','./iv-student-rules-modal-fix.js?v=20260714-2','./iv-search-case-insensitive-fix.js?v=20260714-2','./iv-system-adjustments-202607.js?v=20260714-3'])
       .then(function(){return once('./iv-revision-core.js?v=20260714-2');})
-      .then(function(){var f=['./iv-student-table-premium.js?v=20260714-2','./iv-student-id-column-fix.js?v=20260714-2','./iv-student-selection-ui-fix.js?v=20260714-2','./iv-advance-selective.js?v=20260714-3','./iv-history-trajectory-accordion-fix.js?v=20260714-3'];if(mobile.matches)f.push('./iv-mobile-students-page.js?v=20260714-4');return many(f);});
+      .then(function(){var f=['./iv-student-table-premium.js?v=20260714-2','./iv-student-id-column-fix.js?v=20260714-2','./iv-student-module-status-filters.js?v=20260714-1','./iv-student-selection-ui-fix.js?v=20260714-2','./iv-advance-selective.js?v=20260714-3','./iv-history-trajectory-accordion-fix.js?v=20260714-3'];if(mobile.matches)f.push('./iv-mobile-students-page.js?v=20260714-4');return many(f);});
   }
   function presence(){return once('./iv-presence-filters-stable.js?v=20260714-2').then(function(){if(mobile.matches)return once('./iv-mobile-presence-page.js?v=20260714-5');});}
   function teams(){var f=['./iv-final-retention-history-login-teams.js?v=20260714-2'];if(mobile.matches)f.push('./iv-mobile-teams-page.js?v=20260714-4');return many(f);}
