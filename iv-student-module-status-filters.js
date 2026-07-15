@@ -4,6 +4,9 @@
   if(window.__IV_STUDENT_EXTRA_FILTERS__) return;
   window.__IV_STUDENT_EXTRA_FILTERS__ = true;
 
+  var tableObserver = null;
+  var observedBody = null;
+
   function db(){
     try{return typeof DB !== 'undefined' ? DB : null;}catch(error){return null;}
   }
@@ -52,18 +55,21 @@
     var data = db();
     var body = document.getElementById('tb-alunos');
     if(!data || !body) return;
+    observeBody();
 
-    var moduleValue = document.getElementById('filtro-modulo-aluno').value;
-    var statusValue = document.getElementById('filtro-situacao-aluno').value;
+    var moduleSelect = document.getElementById('filtro-modulo-aluno');
+    var statusSelect = document.getElementById('filtro-situacao-aluno');
+    var moduleValue = moduleSelect ? moduleSelect.value : '';
+    var statusValue = statusSelect ? statusSelect.value : '';
     var byId = Object.create(null);
     (data.alunos || []).forEach(function(student){byId[String(student.id)] = student;});
 
     var oldEmpty = document.getElementById('iv-extra-filter-empty');
-    if(oldEmpty) oldEmpty.remove();
     var visible = 0;
     var dataRows = 0;
 
     Array.prototype.forEach.call(body.querySelectorAll('tr'),function(row){
+      if(row.id === 'iv-extra-filter-empty') return;
       var checkbox = row.querySelector('.chk-aluno[data-id]');
       if(!checkbox) return;
       dataRows += 1;
@@ -77,18 +83,38 @@
     });
 
     if(dataRows && !visible){
-      var empty = document.createElement('tr');
-      empty.id = 'iv-extra-filter-empty';
-      empty.innerHTML = '<td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno encontrado para estes filtros</td>';
-      body.appendChild(empty);
+      if(!oldEmpty){
+        var empty = document.createElement('tr');
+        empty.id = 'iv-extra-filter-empty';
+        empty.innerHTML = '<td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno encontrado para estes filtros</td>';
+        body.appendChild(empty);
+      }
+    }else if(oldEmpty){
+      oldEmpty.remove();
     }
     try{if(typeof window.updateSelUI === 'function') window.updateSelUI();}catch(error){}
   }
 
   function schedule(){
     window.setTimeout(apply,0);
-    window.setTimeout(apply,100);
+    window.setTimeout(apply,90);
     window.setTimeout(apply,220);
+    window.setTimeout(apply,650);
+  }
+
+  function observeBody(){
+    var body = document.getElementById('tb-alunos');
+    if(!body || observedBody === body) return;
+    if(tableObserver) tableObserver.disconnect();
+    observedBody = body;
+    tableObserver = new MutationObserver(function(records){
+      var relevant = records.some(function(record){
+        return Array.prototype.some.call(record.addedNodes,function(node){return node && node.id !== 'iv-extra-filter-empty';}) ||
+          Array.prototype.some.call(record.removedNodes,function(node){return node && node.id !== 'iv-extra-filter-empty';});
+      });
+      if(relevant) schedule();
+    });
+    tableObserver.observe(body,{childList:true});
   }
 
   function patch(){
@@ -119,7 +145,7 @@
     document.addEventListener('input',function(event){if(event.target && event.target.id === 'busca-aluno') schedule();},true);
   }
 
-  function init(){style();addControls();patch();bind();schedule();}
+  function init(){style();addControls();observeBody();patch();bind();schedule();}
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
   window.setTimeout(init,600);
