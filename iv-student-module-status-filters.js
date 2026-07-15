@@ -61,10 +61,12 @@
     var oldEmpty = document.getElementById('iv-extra-filter-empty');
     if(oldEmpty) oldEmpty.remove();
     var visible = 0;
+    var dataRows = 0;
 
     Array.prototype.forEach.call(body.querySelectorAll('tr'),function(row){
       var checkbox = row.querySelector('.chk-aluno[data-id]');
       if(!checkbox) return;
+      dataRows += 1;
       var student = byId[String(checkbox.dataset.id)];
       if(!student) return;
       var show = (!moduleValue || String(student.modulo || '1') === moduleValue) && (!statusValue || situation(student) === statusValue);
@@ -74,7 +76,7 @@
       else clearSelection(row);
     });
 
-    if(!visible){
+    if(dataRows && !visible){
       var empty = document.createElement('tr');
       empty.id = 'iv-extra-filter-empty';
       empty.innerHTML = '<td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">Nenhum aluno encontrado para estes filtros</td>';
