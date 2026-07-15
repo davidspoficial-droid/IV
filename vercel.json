@@ -61,6 +61,12 @@
       ]
     },
     {
+      "source": "/iv-student-table-authority.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-navigation-speed-colors.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
