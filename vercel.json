@@ -55,6 +55,18 @@
       ]
     },
     {
+      "source": "/iv-student-table-premium.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/iv-navigation-speed-colors.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-revision-year-min-2026.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
