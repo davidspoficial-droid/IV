@@ -7,6 +7,6 @@ import('./iv-revision-core.js?v=20260714-2')
   .then(function(){ return import('./iv-reports-general-view-v3.js?v=20260714-1'); })
   .then(function(){ return import('./iv-app-unified.js?v=20260714-8'); })
   .then(function(){ return import('./iv-navigation-speed-colors.js?v=20260714-7'); })
-  .then(function(){ return import('./iv-student-module-status-filters.js?v=20260714-1'); })
+  .then(function(){ return import('./iv-student-module-status-filters.js?v=20260714-2'); })
   .then(function(){ if(window.IVGenerateGeneralViewV4) window.IVGenerateGeneralView = window.IVGenerateGeneralViewV4; })
   .catch(function(error){ console.error('Erro ao iniciar aplicação unificada do IV', error); });
