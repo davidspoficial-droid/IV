@@ -46,6 +46,8 @@
 
   function presenceGroup(){
     return importOnce('./iv-presence-filters-stable.js?v=20260714-2').then(function(){
+      return importOnce('./iv-presence-real-absence-v2.js?v=20260715-2');
+    }).then(function(){
       if(mobile.matches) return importOnce('./iv-mobile-presence-page.js?v=20260714-5');
     });
   }
