@@ -49,6 +49,12 @@
       ]
     },
     {
+      "source": "/iv-permission-entry-recovery.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-presence-bulk-permission.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
@@ -122,6 +128,12 @@
     },
     {
       "source": "/iv-app-unified.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/iv-mobile-menu-singleton.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
       ]
