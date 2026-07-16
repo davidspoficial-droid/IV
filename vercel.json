@@ -49,6 +49,12 @@
       ]
     },
     {
+      "source": "/iv-permission-menu-stability.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-permission-entry-recovery.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
