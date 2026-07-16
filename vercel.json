@@ -121,6 +121,12 @@
       ]
     },
     {
+      "source": "/iv-mobile-users-web-guard.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-mobile-users-action-index-fix.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
