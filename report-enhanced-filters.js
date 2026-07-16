@@ -1,4 +1,5 @@
-import('./iv-revision-core.js?v=20260714-2')
+import('./iv-pwa-runtime-fix.js?v=20260716-1')
+  .then(function(){ return import('./iv-revision-core.js?v=20260714-2'); })
   .then(function(){ return import('./iv-revision-year-min-2026.js?v=20260714-1'); })
   .then(function(){ return import('./iv-report-week-selection-v7.js?v=20260714-1'); })
   .then(function(){ return import('./iv-report-module-header-v8.js?v=20260714-1'); })
