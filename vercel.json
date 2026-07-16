@@ -85,6 +85,12 @@
       ]
     },
     {
+      "source": "/iv-mobile-users-action-index-fix.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-presence-filters-stable.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
