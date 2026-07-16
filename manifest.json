@@ -1,20 +1,23 @@
 {
+  "id": "/",
   "name": "Instituto de Vencedores — Gestão",
   "short_name": "IV Gestão",
   "description": "Sistema de gestão de alunos, equipes, presença e relatórios do Instituto de Vencedores.",
-  "start_url": "./index.html?v=logo5",
-  "scope": "./",
-  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#050A14",
-  "theme_color": "#030712",
+  "theme_color": "#050A14",
   "lang": "pt-BR",
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "./IV.png?v=logo5",
+      "src": "/IV.png",
       "sizes": "any",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
