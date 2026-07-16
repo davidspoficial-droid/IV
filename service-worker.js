@@ -1,4 +1,5 @@
-const IV_CACHE = 'iv-gestao-v6';
+const IV_CACHE = 'iv-gestao-pwa-v7';
+const APP_ROOT = '/';
 
 const LOGIN_PREMIUM_STYLE = `
 <style id="iv-login-critical-premium">
@@ -14,22 +15,15 @@ body.auth-lock #auth-screen .auth-card h1{font-size:38px!important;background:li
 </style>
 `;
 
-self.addEventListener('install', event => {
-  event.waitUntil(self.skipWaiting());
-});
+function offlineHtml(){
+  return new Response('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050A14"><title>IV Gestão</title><style>*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#050A14;color:#E8F0FF;font-family:Arial,sans-serif}body{min-height:100dvh;display:grid;place-items:center;padding:24px}.box{max-width:420px;padding:24px;border:1px solid #1E2E4A;border-radius:22px;background:#0D1626;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45)}h1{font-size:21px;margin:0 0 10px;color:#7EC8F0}p{font-size:13px;line-height:1.55;color:#9CB8D6;margin:0}</style></head><body><main class="box"><h1>IV Gestão</h1><p>Não foi possível conectar agora. Verifique a internet e abra o aplicativo novamente.</p></main></body></html>', {
+    status: 200,
+    headers: {'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}
+  });
+}
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
-});
-
-async function htmlPremiumResponse(request){
-  const response = await fetch(request, { cache: 'no-store' });
+async function premiumHtml(response){
   const original = await response.text();
-
   let html = original
     .replace(/<!-- LOADING OVERLAY -->[\s\S]*?<!-- SYNC BADGE -->/i, '<!-- SYNC BADGE -->')
     .replace('./report-final-adjustments.js?v=2', './report-final-adjustments.js?v=9');
@@ -48,22 +42,70 @@ async function htmlPremiumResponse(request){
   });
 }
 
+async function cacheShell(response){
+  try{
+    const cache = await caches.open(IV_CACHE);
+    await cache.put(APP_ROOT, response.clone());
+    await cache.put('/index.html', response.clone());
+  }catch(error){}
+  return response;
+}
+
+async function fetchRoot(){
+  const response = await fetch(APP_ROOT, {cache:'no-store', redirect:'follow'});
+  if(!response.ok) throw new Error('Falha ao abrir raiz');
+  return cacheShell(await premiumHtml(response));
+}
+
+async function navigationResponse(request){
+  try{
+    const response = await fetch(request, {cache:'no-store', redirect:'follow'});
+    if(!response.ok) throw new Error('Falha de navegação');
+    return cacheShell(await premiumHtml(response));
+  }catch(error){
+    try{return await fetchRoot();}catch(rootError){}
+    const cached = await caches.match(APP_ROOT) || await caches.match('/index.html');
+    return cached || offlineHtml();
+  }
+}
+
+self.addEventListener('install', event => {
+  event.waitUntil((async function(){
+    await self.skipWaiting();
+    try{await fetchRoot();}catch(error){}
+  })());
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil((async function(){
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key !== IV_CACHE).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('message', event => {
+  if(event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
+  if(event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  const isHtml = event.request.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('.html');
-  const isScriptOrCss = url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
+  if(url.origin !== self.location.origin) return;
 
-  if (isHtml) {
-    event.respondWith(htmlPremiumResponse(event.request));
+  const isHtml = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
+  const isScriptOrCss = url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.json');
+
+  if(isHtml){
+    event.respondWith(navigationResponse(event.request));
     return;
   }
 
-  if (isScriptOrCss) {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+  if(isScriptOrCss){
+    event.respondWith(fetch(event.request, {cache:'no-store'}).catch(() => caches.match(event.request)));
     return;
   }
 
-  event.respondWith(fetch(event.request));
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
