@@ -37,6 +37,12 @@
       ]
     },
     {
+      "source": "/iv-firebase-concurrency-guard.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/report-fix.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
