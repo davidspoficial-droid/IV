@@ -43,6 +43,12 @@
       ]
     },
     {
+      "source": "/iv-permission-authority.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/report-fix.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
