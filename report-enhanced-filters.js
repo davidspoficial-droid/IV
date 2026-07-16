@@ -1,6 +1,7 @@
 import('./iv-pwa-runtime-fix.js?v=20260716-2')
   .then(function(){ return import('./iv-firebase-concurrency-guard.js?v=20260716-1'); })
   .then(function(){ return import('./iv-permission-authority.js?v=20260716-1'); })
+  .then(function(){ return import('./iv-permission-menu-stability.js?v=20260716-1'); })
   .then(function(){ return import('./iv-permission-entry-recovery.js?v=20260716-1'); })
   .then(function(){ return import('./iv-presence-bulk-permission.js?v=20260716-1'); })
   .then(function(){ return import('./iv-revision-core.js?v=20260714-2'); })
@@ -22,5 +23,6 @@ import('./iv-pwa-runtime-fix.js?v=20260716-2')
   .then(function(){
     if(window.IVGenerateGeneralViewV4) window.IVGenerateGeneralView = window.IVGenerateGeneralViewV4;
     if(window.IVPermissionAuthority) window.IVPermissionAuthority.refresh();
+    if(window.IVPermissionMenuStability) window.IVPermissionMenuStability.refresh();
   })
   .catch(function(error){ console.error('Erro ao iniciar aplicação unificada do IV', error); });
