@@ -1,4 +1,4 @@
-const IV_CACHE = 'iv-gestao-pwa-v7';
+const IV_CACHE = 'iv-gestao-pwa-v8';
 const APP_ROOT = '/';
 
 const LOGIN_PREMIUM_STYLE = `
