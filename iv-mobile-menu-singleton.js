@@ -1,4 +1,4 @@
-// IV - garante um unico menu mobile e entrada sempre fechada
+// IV - garante um unico menu mobile sem fechamentos tardios
 (function(){
   'use strict';
   if(window.__IV_MOBILE_MENU_SINGLETON__) return;
@@ -9,8 +9,14 @@
   var timer=null;
 
   function close(){
+    try{
+      if(window.IVMobileMenuControl&&typeof window.IVMobileMenuControl.close==='function'){
+        window.IVMobileMenuControl.close();
+        return;
+      }
+    }catch(error){}
     if(!document.body)return;
-    document.body.classList.remove('iv-mobile-menu-open','mobile-menu-open');
+    document.body.classList.remove('iv-mobile-menu-user-open','iv-mobile-menu-open','mobile-menu-open');
     var button=document.getElementById('iv-mobile-menu-toggle');
     if(button)button.setAttribute('aria-label','Abrir menu');
   }
@@ -51,12 +57,12 @@
     }
   }
 
-  function patchAfter(name){
+  function patchAfter(name,shouldClose){
     var current=window[name];
     if(typeof current!=='function'||current._ivMenuSingleton)return;
     var wrapped=function(){
       var result=current.apply(this,arguments);
-      var done=function(){close();schedule(false);};
+      var done=function(){if(shouldClose)close();schedule(false);};
       if(result&&typeof result.finally==='function')result.finally(done);else setTimeout(done,0);
       return result;
     };
@@ -80,9 +86,9 @@
 
   function apply(closeNow){
     dedupe();
-    patchAfter('entrarSistema');
-    patchAfter('loadDB');
-    patchAfter('sairSistema');
+    patchAfter('entrarSistema',true);
+    patchAfter('loadDB',false);
+    patchAfter('sairSistema',true);
     observe();
     if(closeNow)close();
   }
@@ -100,8 +106,8 @@
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){schedule(true);},{once:true});
   else schedule(true);
-  document.addEventListener('firebase-ready',function(){schedule(true);});
-  window.addEventListener('pageshow',function(){schedule(true);});
-  if(media.addEventListener)media.addEventListener('change',function(){schedule(true);});
-  else if(media.addListener)media.addListener(function(){schedule(true);});
+  document.addEventListener('firebase-ready',function(){schedule(false);});
+  window.addEventListener('pageshow',function(){schedule(false);});
+  if(media.addEventListener)media.addEventListener('change',function(event){if(!event.matches)close();schedule(false);});
+  else if(media.addListener)media.addListener(function(event){if(!event.matches)close();schedule(false);});
 })();
