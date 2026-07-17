@@ -30,8 +30,14 @@
   }
 
   function closeMenu(){
+    try{
+      if(window.IVMobileMenuControl&&typeof window.IVMobileMenuControl.close==='function'){
+        window.IVMobileMenuControl.close();
+        return;
+      }
+    }catch(error){}
     if(!document.body)return;
-    document.body.classList.remove('iv-mobile-menu-open','mobile-menu-open');
+    document.body.classList.remove('iv-mobile-menu-user-open','iv-mobile-menu-open','mobile-menu-open');
     var button=document.getElementById('iv-mobile-menu-toggle');
     if(button)button.setAttribute('aria-label','Abrir menu');
   }
@@ -76,7 +82,6 @@
   function recover(){
     style();
     removeMessage();
-    closeMenu();
     var user=profile();
     if(!user){
       if(document.body)document.body.classList.add('iv-permission-entry-pending');
@@ -107,7 +112,13 @@
     observer.observe(document.body,{childList:true});
   }
 
-  function init(){style();if(document.body)document.body.classList.add('iv-permission-entry-pending');observe();schedule();}
+  function init(){
+    style();
+    closeMenu();
+    if(document.body)document.body.classList.add('iv-permission-entry-pending');
+    observe();
+    schedule();
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
   document.addEventListener('firebase-ready',schedule);
   window.addEventListener('iv-concurrency-saved',schedule);
