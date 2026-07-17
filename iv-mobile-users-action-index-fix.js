@@ -39,5 +39,5 @@
   function init(){patch();watch();repair()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
   setTimeout(init,600);setTimeout(init,1600);
-  import('./iv-current-user-premium.js?v=20260717-2').catch(function(error){console.error('Erro ao carregar identificação do usuário',error);});
+  import('./iv-current-user-premium.js?v=20260717-3').catch(function(error){console.error('Erro ao carregar identificação do usuário',error);});
 })();
