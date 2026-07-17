@@ -145,6 +145,12 @@
       ]
     },
     {
+      "source": "/iv-mobile-menu-stay-open.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
       "source": "/iv-mobile-users-history-premium.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
@@ -170,6 +176,12 @@
     },
     {
       "source": "/iv-presence-real-absence-v2.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/iv-presence-review-filter-v2.js",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
       ]
